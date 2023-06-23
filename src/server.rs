@@ -1,18 +1,14 @@
 // Copyright 2023 Naian G.
 // SPDX-License-Identifier: Apache-2.0
-use axum::{Router, routing::get};
+use crate::router::create_router;
 
 pub async fn run_server() {
     // app definition, and routings
-    let app = Router::new().route("/", get(handle_get));
+    let app = create_router();
 
     // add server task to main loop
     axum::Server::bind(&"127.0.0.1:7999".parse().unwrap())
       .serve(app.into_make_service())
       .await
       .unwrap();
-}
-
-async fn handle_get() -> String  {
-    "hey".to_owned()
 }
