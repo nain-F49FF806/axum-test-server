@@ -4,6 +4,6 @@ use axum::{Router, routing::get};
 use crate::routes::hello_world;
 
 pub fn create_router() -> Router {
-    let app = Router::new().route("/", get(hello_world::handle_get));
+    let app = Router::new().route("/", get(hello_world::handle_get).post(hello_world::handle_get));
     return app;
 }
