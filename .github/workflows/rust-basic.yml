@@ -1,4 +1,4 @@
-name: Rust build and unit test
+name: Rust basic workflow
 
 on:
   push:
@@ -11,7 +11,7 @@ env:
 
 jobs:
   build_and_unit_test:
-
+    name: Build and unit test
     runs-on: ubuntu-latest
 
     steps:
@@ -37,3 +37,14 @@ jobs:
         # Duration after which artifact will expire in days. 0 means using default retention.
         # Minimum 1 day. Maximum 90 days unless changed from the repository settings page.
         retention-days: 1 # optional
+  lint:
+    if: github.event_name == 'pull_request'
+    name: Lint Action
+    runs-on: ubuntu-latest
+    needs: build_and_unit_test
+    steps:
+      - name: Run linters
+        uses: wearerequired/lint-action@v2
+        with:
+          clippy: true
+          rustfmt: true
