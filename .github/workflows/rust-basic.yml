@@ -44,7 +44,4 @@ jobs:
     needs: build_and_unit_test
     steps:
       - name: Run linters
-        uses: wearerequired/lint-action@v2
-        with:
-          clippy: true
-          rustfmt: true
+        run: cargo clippy --verbose --no-deps
