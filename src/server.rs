@@ -8,7 +8,7 @@ pub async fn run_server() {
 
     // add server task to main loop
     axum::Server::bind(&"127.0.0.1:7999".parse().unwrap())
-      .serve(app.into_make_service())
-      .await
-      .unwrap();
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
 }
