@@ -1,9 +1,8 @@
 // Copyright 2023 Naian G.
 // SPDX-License-Identifier: Apache-2.0
 
-use serde::{Serialize, Deserialize};
 use axum::Json;
-
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MessageJson {
@@ -17,12 +16,12 @@ pub struct MessageResponseJson {
 }
 
 pub async fn echo_message_json(Json(body): Json<MessageJson>) -> Json<MessageJson> {
-    return Json(body)
+    Json(body)
 }
 
 pub async fn respond_message_json(Json(body): Json<MessageJson>) -> Json<MessageResponseJson> {
-    Json(MessageResponseJson { 
-        message: (body.message), 
-        response: ("I am groot".to_owned()) 
+    Json(MessageResponseJson {
+        message: (body.message),
+        response: ("I am groot".to_owned()),
     })
 }
