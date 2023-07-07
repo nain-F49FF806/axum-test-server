@@ -2,9 +2,9 @@ name: Rust basic workflow
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "ci-integration-test", "ci-cd" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "ci-integration-test", "ci-cd"]
 
 env:
   CARGO_TERM_COLOR: always
