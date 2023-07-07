@@ -39,10 +39,20 @@ jobs:
         retention-days: 1 # optional
   lint:
     if: github.event_name == 'pull_request'
+    needs: build_and_unit_test
     name: Lint Action
     runs-on: ubuntu-latest
-    needs: build_and_unit_test
     steps:
       - uses: actions/checkout@v3
       - name: Run linters
         run: cargo clippy --verbose --no-deps
+  integration_test:
+    needs: build_and_unit_test
+    runs-on: ubuntu-latest
+    name: Integration testing
+    steps:
+      - name: E2E test endpoints
+        run: |
+          cargo run &
+            sleep 5 && 
+            cargo test --verbose -- --nocapture
