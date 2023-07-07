@@ -87,7 +87,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cargo-        
     - name: Run linters
-      run: cargo clippy --verbose --no-deps
+      run: cargo clippy --verbose --no-deps --all-targets --all-features -- -D warnings
   integration_test:
     needs: check
     runs-on: ubuntu-latest
