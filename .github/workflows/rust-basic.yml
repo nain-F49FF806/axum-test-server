@@ -10,25 +10,25 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build_and_cache:
-    name: Build and unit test
+  build:
+    name: Build and cache
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Build
-      run: cargo build --verbose
-    # - name: Run unit tests
-    #   run: cargo test --bins --verbose
-    - name: Cache cargo package cache
+    - name: Cargo build cache
+      # Restore / save build cache to speed up operations
+      # If no cache was found and job succeeds cache of paths will be created
       uses: actions/cache@v3
       with:
-        path: ~/.cargo
-        key: ${{ runner.os }}-cargo-package-cache-${{ hashFiles('**/Cargo.lock') }}
-    - name: Cache cargo builds
-      uses: actions/cache@v3
-      with:
-        path: ./target
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
         key: ${{ runner.os }}-cargo-build-cache-${{ hashFiles('**/Cargo.lock') }}
+    - name: Build
+      run: cargo build --verbose  
     - name: Upload built binary
       uses: actions/upload-artifact@v3.1.2
       with:
@@ -54,22 +54,22 @@ jobs:
       - name: Run linters
         run: cargo clippy --verbose --no-deps
   integration_test:
-    needs: build_and_cache
+    needs: build
     runs-on: ubuntu-latest
     name: Integration testing
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
-    - name: Restore cargo package cache
+    - name: Cargo test cache
       uses: actions/cache@v3
       with:
-        path: ~/.cargo
-        key: ${{ runner.os }}-cargo-package-cache-${{ hashFiles('**/Cargo.lock') }}
-    - name: Restore cargo build cache
-      uses: actions/cache@v3
-      with:
-        path: ./target
-        key: ${{ runner.os }}-cargo-build-cache-${{ hashFiles('**/Cargo.lock') }}
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-test-cache-${{ hashFiles('**/Cargo.lock') }}
     - name: E2E test endpoints
       run: |
         cargo run &
