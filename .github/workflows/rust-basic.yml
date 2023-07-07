@@ -13,13 +13,17 @@ jobs:
   build_and_cache:
     name: Build and unit test
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
     - name: Build
       run: cargo build --verbose
     # - name: Run unit tests
     #   run: cargo test --bins --verbose
+    - name: Cache cargo builds
+      uses: actions/cache@v3
+      with:
+        path: ./target
+        key: ${{ runner.os }}-cargo-build-cache-${{ hashFiles('**/Cargo.lock') }}
     - name: Upload built binary
       uses: actions/upload-artifact@v3.1.2
       with:
@@ -38,7 +42,6 @@ jobs:
         retention-days: 1 # optional
   lint:
     if: github.event_name == 'pull_request'
-    needs: build_and_cache
     name: Lint Action
     runs-on: ubuntu-latest
     steps:
@@ -50,9 +53,15 @@ jobs:
     runs-on: ubuntu-latest
     name: Integration testing
     steps:
-      - uses: actions/checkout@v3
-      - name: E2E test endpoints
-        run: |
-          cargo run &
-            sleep 5 && 
-            cargo test --verbose -- --nocapture
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Restore cargo build cache
+      uses: actions/cache@v3
+      with:
+        path: ./target
+        key: ${{ runner.os }}-cargo-build-cache-${{ hashFiles('**/Cargo.lock') }}
+    - name: E2E test endpoints
+      run: |
+        cargo run &
+          sleep 5 && 
+          cargo test --verbose -- --nocapture
