@@ -10,7 +10,26 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  check:
+    name: Check for obvious errors
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Cargo cache step
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-check-cache-${{ hashFiles('**/Cargo.lock') }}
+    - name: cargo check
+      run: cargo check --verbose
   build:
+    needs: check
     name: Build and cache
     runs-on: ubuntu-latest
     steps:
@@ -54,7 +73,7 @@ jobs:
       - name: Run linters
         run: cargo clippy --verbose --no-deps
   integration_test:
-    needs: build
+    needs: check
     runs-on: ubuntu-latest
     name: Integration testing
     steps:
