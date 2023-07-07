@@ -16,7 +16,7 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
-    - name: Cargo cache step
+    - name: Cargo cache
       uses: actions/cache@v3
       with:
         path: |
@@ -26,6 +26,8 @@ jobs:
           ~/.cargo/git/db/
           target/
         key: ${{ runner.os }}-cargo-check-cache-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
     - name: cargo check
       run: cargo check --verbose
   build:
@@ -46,6 +48,8 @@ jobs:
           ~/.cargo/git/db/
           target/
         key: ${{ runner.os }}-cargo-build-cache-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-    
     - name: Build
       run: cargo build --verbose  
     - name: Upload built binary
@@ -69,9 +73,21 @@ jobs:
     name: Lint Action
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Run linters
-        run: cargo clippy --verbose --no-deps
+    - uses: actions/checkout@v3
+    - name: Cargo lint cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-lint-cache-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-        
+    - name: Run linters
+      run: cargo clippy --verbose --no-deps
   integration_test:
     needs: check
     runs-on: ubuntu-latest
@@ -89,6 +105,8 @@ jobs:
           ~/.cargo/git/db/
           target/
         key: ${{ runner.os }}-cargo-test-cache-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-        
     - name: E2E test endpoints
       run: |
         cargo run &
