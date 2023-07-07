@@ -51,6 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Integration testing
     steps:
+      - uses: actions/checkout@v3
       - name: E2E test endpoints
         run: |
           cargo run &
