@@ -1,14 +1,8 @@
 # axum-test-server
 A axum server app to test and learn Rust and Axum features.
 
-## Notes 
-
 The commits are made in such a way as to demonstrate and try one feature or workflow (refactoring) at a time.  
 So the git log could be educative.  
-
-You can also look at a blog post with some personal notes (mostly for the Rust side) here : [running-notes-on-rust-and-axum-framework]
-
-[running-notes-on-rust-and-axum-framework]: https://envs.net/~nain/aries-vcx-diaries/running-notes-on-rust-and-axum-framework-ft-tutorial-course-by-brooks-builds.html
 
 ## Some Interesting commits
 
@@ -23,3 +17,9 @@ You can also look at a blog post with some personal notes (mostly for the Rust s
 5. [refactor: modules can have sub-modules, which can then be loaded by others using path from root crate (*if made public*)](https://github.com/nain-F49FF806/axum-test-server/commit/877cf3bac05d9cf786db3ae45202b2d4d9a98a5c)
 
 6. [feat(json): serde macros help with serializing, deserializing from Rust structs to JSON wire format](https://github.com/nain-F49FF806/axum-test-server/commit/505ec1ec8fc6169620be235231643f678bab20ff)
+
+
+## Notes 
+You can also look at a blog post with some personal notes (mostly for the Rust side) here : [running-notes-on-rust-and-axum-framework]
+
+[running-notes-on-rust-and-axum-framework]: https://envs.net/~nain/aries-vcx-diaries/running-notes-on-rust-and-axum-framework-ft-tutorial-course-by-brooks-builds.html
