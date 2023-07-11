@@ -1,5 +1,5 @@
 # axum-test-server
-A axum server app to test and learn features on
+A axum server app to test and learn Rust and Axum features.
 
 ## Notes 
 
