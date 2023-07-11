@@ -18,7 +18,7 @@ fn test_base_path_returns_hey() -> Result<(), Error> {
             Ok(())
         }
         Err(err) => {
-            return Err(err);
+            Err(err)
         }
     }
 }
