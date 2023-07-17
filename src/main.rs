@@ -4,6 +4,7 @@ mod logging;
 mod router;
 mod routes;
 mod server;
+mod database;
 use log::info;
 use server::run_server;
 
@@ -11,5 +12,6 @@ use server::run_server;
 async fn main() {
     logging::init_logger();
     info!("Hello, world!");
+    let _pool = database::setup_postgresql_db().await;
     run_server().await;
 }
