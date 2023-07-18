@@ -9,11 +9,10 @@ pub async fn setup_postgresql_db() -> Pool<Postgres> {
     let database_url: String = 
         env::var("POSTGRES_URL").expect("Environment variable POSTGRES_URL not found in .env!");
     
-    let pool = PgPoolOptions::new()
+    PgPoolOptions::new()
         .connect(&database_url)
         .await
-        .expect("Failed to connect to database!");
-    pool
+        .expect("Failed to connect to database!")
 }
 
 
