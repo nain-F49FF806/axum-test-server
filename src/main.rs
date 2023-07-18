@@ -12,6 +12,6 @@ use server::run_server;
 async fn main() {
     logging::init_logger();
     info!("Hello, world!");
-    let _pool = database::setup_postgresql_db().await;
+    let _pool = database::get_db_pool().await;
     run_server().await;
 }
