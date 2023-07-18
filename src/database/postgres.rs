@@ -4,6 +4,7 @@
 use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use std::env;
 
+#[allow(dead_code)]
 pub async fn setup_postgresql_db() -> Pool<Postgres> {
     let _ = dotenvy::dotenv().expect(".env file not found!");
     let database_url: String = 

@@ -3,6 +3,7 @@
 
 use sqlx::{mysql::MySqlPoolOptions, MySqlPool};
 
+#[allow(dead_code)]
 pub async fn setup_mysql_db() -> Result<MySqlPool, dotenvy::Error> {
     let _ = dotenvy::dotenv()?;
     let database_url = dotenvy::var("MYSQL_URL")?;
