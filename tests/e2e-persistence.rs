@@ -1,7 +1,7 @@
 // Copyright 2023 Naian G.
 // SPDX-License-Identifier: Apache-2.0
 
-use xum_test_server::didcomm_types::{ForwardMsg, StatusMsg, TypeURI};
+use xum_test_server::didcomm_types::ForwardMsg;
 
 const BASE_URL: &str = "http://localhost:7999";
 
