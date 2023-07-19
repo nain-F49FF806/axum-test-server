@@ -17,7 +17,7 @@ pub async fn forward_message_persist(forward_msg: &ForwardMsg, pool: &sqlx::AnyP
     debug!("{forward_msg:?}");
     sqlx::query("INSERT INTO forward_raw VALUES (DEFAULT, ?, ?, DEFAULT)")
     .bind(&forward_msg.recipient_key)
-    .bind(&forward_msg.msg)
+    .bind(&forward_msg.message)
     .execute(pool)
     .await
     .unwrap();
@@ -35,7 +35,7 @@ mod tests {
 
         sqlx::query("INSERT INTO forward_raw VALUES (DEFAULT, ?, ?, DEFAULT)")
             .bind(forward_msg.recipient_key)
-            .bind(forward_msg.msg)
+            .bind(forward_msg.message)
             .execute(&pool)
             .await
             .unwrap();

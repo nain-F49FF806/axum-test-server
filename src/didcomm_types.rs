@@ -5,30 +5,37 @@ use serde::{Deserialize, Serialize};
 
 
 pub mod TypeURI {
-    pub const Forward: &str = "https://didcomm.org/routing/1.0/forward";
-    pub const PickupStatusReq: &str = "https://didcomm.org/messagepickup/2.0/status";
-    pub const PickupDeliveryReq: &str = "https://didcomm.org/messagepickup/2.0/delivery-request";
-    pub const PickupReceived: &str = "https://didcomm.org/messagepickup/2.0/messages-received";
-    pub const PickupStatus: &str = "https://didcomm.org/messagepickup/2.0/status";
-    pub const PickupDelivery: &str = "https://didcomm.org/messagepickup/2.0/delivery";
-
+    pub const FORWARD: &str = "https://didcomm.org/routing/1.0/forward";
+    pub const PICKUP_STATUS_REQ: &str = "https://didcomm.org/messagepickup/2.0/status";
+    pub const PICKUP_STATUS: &str = "https://didcomm.org/messagepickup/2.0/status";
+    pub const PICKUP_DELIVERY_REQ: &str = "https://didcomm.org/messagepickup/2.0/delivery-request";
+    pub const PICKUP_DELIVERY: &str = "https://didcomm.org/messagepickup/2.0/delivery";
+    pub const PICKUP_RECEIVED: &str = "https://didcomm.org/messagepickup/2.0/messages-received";
 }
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct ForwardMsg {
     #[serde(rename = "@type")]
-    pub _type: String,
+    _type: String,
     #[serde(rename = "to")]
     pub recipient_key: String,
-    pub msg: String,
+    #[serde(rename = "msg")]
+    pub message: String,
 }
 
 impl ForwardMsg {
     pub fn default_alice() -> ForwardMsg {
         ForwardMsg { 
-            _type: TypeURI::Forward.to_owned(), 
+            _type: TypeURI::FORWARD.to_owned(), 
             recipient_key: "Alice".to_owned(),
-            msg: "Hello!".to_owned()
+            message: "Hello!".to_owned()
+        }
+    }
+    pub fn new(recipient_key: &str, message: &str) -> ForwardMsg {
+        ForwardMsg { 
+            _type: TypeURI::FORWARD.to_string(),
+            recipient_key: recipient_key.to_string(),
+            message: message.to_string()
         }
     }
 }
