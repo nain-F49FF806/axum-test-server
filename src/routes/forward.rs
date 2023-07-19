@@ -3,26 +3,16 @@
 
 use axum::{Json, extract::State};
 use crate::didcomm_types::ForwardMsg;
+use crate::storage::Storage;
 use std::sync::Arc;
 use log::{info, debug};
 
-pub async fn handle_forward(State(arc_pool): State<Arc<sqlx::AnyPool>>, Json(forward_msg): Json<ForwardMsg>) -> Json<ForwardMsg> {
-    forward_message_persist(&forward_msg, &arc_pool).await;
+pub async fn handle_forward(State(storage): State<Arc<Storage>>, Json(forward_msg): Json<ForwardMsg>) -> Json<ForwardMsg> {
+    info!("Persisting forward message");
+    debug!("{forward_msg:#?}");
+    storage.persist_forward_message(&forward_msg).await;
     Json(forward_msg)
 }
-
-
-pub async fn forward_message_persist(forward_msg: &ForwardMsg, pool: &sqlx::AnyPool) {
-    info!("Persisting message into database");
-    debug!("{forward_msg:?}");
-    sqlx::query("INSERT INTO forward_raw VALUES (DEFAULT, ?, ?, DEFAULT)")
-    .bind(&forward_msg.recipient_key)
-    .bind(&forward_msg.message)
-    .execute(pool)
-    .await
-    .unwrap();
-}
-
 
 #[cfg(test)]
 mod tests {
