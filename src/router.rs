@@ -3,9 +3,11 @@
 use crate::routes::hello_world;
 use crate::routes::json;
 use crate::routes::json::respond_message_json;
-use axum::{routing::get, Router};
+use crate::routes::forward::handle_forward;
+use axum::{routing::get, routing::post, Router};
+use std::sync::Arc;
 
-pub fn create_router() -> Router {
+pub fn create_router(pool: sqlx::AnyPool) -> Router {
     Router::new()
         .route(
             "/",
@@ -15,4 +17,9 @@ pub fn create_router() -> Router {
             "/json",
             get(json::echo_message_json).post(respond_message_json),
         )
+        .route(
+            "/forward",
+            post(handle_forward),
+        )
+        .with_state(Arc::new(pool))
 }
