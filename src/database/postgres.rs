@@ -28,6 +28,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore]
     pub async fn test_query() {
         let first_todo_title = "Learn SQLx";
         let pool = setup_postgresql_db().await;

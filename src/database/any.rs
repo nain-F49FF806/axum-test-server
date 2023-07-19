@@ -16,3 +16,21 @@ pub async fn get_db_pool () -> AnyPool {
         .await
         .expect("Failed to connect to database!")
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::get_db_pool;
+
+    #[tokio::test]
+    pub async fn test_query() {
+        let first_todo_title = "Learn SQLx";
+        let pool = get_db_pool().await;
+
+        sqlx::query("INSERT INTO todos (title) VALUES (?)")
+            .bind(first_todo_title)
+            .execute(&pool)
+            .await
+            .unwrap();
+    }
+}
