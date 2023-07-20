@@ -7,7 +7,7 @@ use sqlx::{postgres::PgPoolOptions, PgPool};
 pub async fn get_db_pool() -> PgPool {
     let _ = dotenvy::dotenv().expect(".env file not found! Need .env file with POSTGRES_URL variable defined");
     let database_url: String = 
-        dotenvy::var("POSTGRES_URL").expect("Environment variable POSTGRES_URL not found in .env!");
+        std::env::var("POSTGRES_URL").expect("Environment variable POSTGRES_URL not found in .env!");
     
     PgPoolOptions::new()
         .connect(&database_url)
