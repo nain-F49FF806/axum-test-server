@@ -92,6 +92,18 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     name: Integration testing
+    services: 
+      mysql:
+        image: mysql:latest
+        env:
+          MYSQL_DATABASE: xum.mysql.db
+          MYSQL_USER: admin
+          MYSQL_PASSWORD: password1235
+          MYSQL_ROOT_PASSWORD: password1235
+        ports:
+          - '3306:3306'
+    env:
+      MYSQL_URL: mysql://admin:password1235@localhost:3306/xum.mysql.db
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
