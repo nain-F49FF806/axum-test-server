@@ -1,14 +1,13 @@
 // Copyright 2023 Naian G.
 // SPDX-License-Identifier: Apache-2.0
 
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
-use std::env;
+use sqlx::{postgres::PgPoolOptions, PgPool};
 
 #[allow(dead_code)]
-pub async fn setup_postgresql_db() -> Pool<Postgres> {
-    let _ = dotenvy::dotenv().expect(".env file not found!");
+pub async fn get_db_pool() -> PgPool {
+    let _ = dotenvy::dotenv().expect(".env file not found! Need .env file with POSTGRES_URL variable defined");
     let database_url: String = 
-        env::var("POSTGRES_URL").expect("Environment variable POSTGRES_URL not found in .env!");
+        dotenvy::var("POSTGRES_URL").expect("Environment variable POSTGRES_URL not found in .env!");
     
     PgPoolOptions::new()
         .connect(&database_url)
@@ -19,7 +18,7 @@ pub async fn setup_postgresql_db() -> Pool<Postgres> {
 
 #[cfg(test)]
 mod tests {
-    use super::setup_postgresql_db;
+    use super::get_db_pool;
 
     #[test]
     fn it_works() {
@@ -31,7 +30,7 @@ mod tests {
     #[ignore]
     pub async fn test_query() {
         let first_todo_title = "Learn SQLx";
-        let pool = setup_postgresql_db().await;
+        let pool = get_db_pool().await;
     
         sqlx::query("INSERT INTO todos (title) VALUES ($1)")
             .bind(first_todo_title)

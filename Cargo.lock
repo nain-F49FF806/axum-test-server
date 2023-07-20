@@ -2175,6 +2175,7 @@ name = "xum-test-server"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "cfg-if",
  "dotenvy",
  "env_logger",
  "log",

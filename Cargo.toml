@@ -7,9 +7,15 @@ edition = "2021"
 path = "src/lib.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+default = ["MysqlDB"]
+PostgresqlDB=[]
+MysqlDB=[]
+AnyDB=[]
 
 [dependencies]
 axum = "0.6.18"
+cfg-if = "1.0.0"
 dotenvy = "0.15.7"
 env_logger = "0.10.0"
 log = "0.4.19"

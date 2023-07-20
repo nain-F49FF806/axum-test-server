@@ -4,12 +4,13 @@
 use sqlx::{mysql::MySqlPoolOptions, MySqlPool};
 
 #[allow(dead_code)]
-pub async fn setup_mysql_db() -> Result<MySqlPool, dotenvy::Error> {
-    let _ = dotenvy::dotenv()?;
-    let database_url = dotenvy::var("MYSQL_URL")?;
-    let pool = MySqlPoolOptions::new()
+pub async fn get_db_pool() -> MySqlPool {
+    let _ = dotenvy::dotenv().expect(".env file not found! Need .env file with MYSQL_URL variable defined");
+    let database_url = 
+        dotenvy::var("MYSQL_URL").expect("Environment variable MYSQL_URL not found in .env!");
+
+    MySqlPoolOptions::new()
         .connect(&database_url)
         .await
-        .expect("Failed to connect to database!");
-    Ok(pool)
+        .expect("Failed to connect to database!")
 }
