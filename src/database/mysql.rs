@@ -5,9 +5,9 @@ use sqlx::{mysql::MySqlPoolOptions, MySqlPool};
 
 #[allow(dead_code)]
 pub async fn get_db_pool() -> MySqlPool {
-    let _ = dotenvy::dotenv().expect(".env file not found! Need .env file with MYSQL_URL variable defined");
+    let _ = dotenvy::dotenv();
     let database_url = 
-        std::env::var("MYSQL_URL").expect("Environment variable MYSQL_URL not found in .env!");
+        std::env::var("MYSQL_URL").expect("Required environment variable MYSQL_URL on command line or in .env!");
 
     MySqlPoolOptions::new()
         .connect(&database_url)
