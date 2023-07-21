@@ -3,7 +3,6 @@
 
 use sqlx::{postgres::PgPoolOptions, PgPool};
 
-#[allow(dead_code)]
 pub async fn get_db_pool() -> PgPool {
     let _ = dotenvy::dotenv();
     let database_url: String = 

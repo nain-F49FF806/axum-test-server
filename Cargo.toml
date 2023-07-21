@@ -9,9 +9,9 @@ path = "src/lib.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [features]
 default = ["mysql_db"]
-postgres_db=[]
-mysql_db=[]
-any_db=[]
+postgres_db=["sqlx/postgres"]
+mysql_db=["sqlx/mysql"]
+any_db=["sqlx/all-databases"]
 
 [dependencies]
 axum = "0.6.18"
@@ -19,7 +19,7 @@ dotenvy = "0.15.7"
 env_logger = "0.10.0"
 log = "0.4.19"
 serde = { version = "1.0.164", features = ["derive"] }
-sqlx = { version = "0.7.1", features = ["runtime-tokio", "all-databases"] }
+sqlx = { version = "0.7.1", features = ["runtime-tokio"], optional = true }
 tokio = { version = "1.28.2", features = ["rt-multi-thread", "macros"] }
 
 [dev-dependencies]
