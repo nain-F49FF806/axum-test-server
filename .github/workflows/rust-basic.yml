@@ -120,7 +120,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cargo-
     - name: Install prerequisites (sqlx)
-      run: cargo install sqlx-cli
+      run: cargo install sqlx-cli || true
     - name: Setup database
       run: DATABASE_URL=${MYSQL_URL} sqlx migrate run
     - name: E2E test endpoints
