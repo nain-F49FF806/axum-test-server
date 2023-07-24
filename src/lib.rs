@@ -5,6 +5,5 @@ pub mod logging;
 pub mod router;
 pub mod routes;
 pub mod server;
-pub mod database;
 pub mod didcomm_types;
 pub mod storage;

@@ -1,9 +1,10 @@
 // Copyright 2023 Naian G.
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::database::get_db_pool;
+pub mod database;
+use database::get_db_pool;
 use crate::didcomm_types::ForwardMsg;
-// use async_trait::async_trait;
+
 
 #[cfg(any(
     not(any(feature = "any_db", feature = "postgres_db", feature = "mysql_db")),
