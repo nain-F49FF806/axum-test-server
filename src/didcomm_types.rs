@@ -3,7 +3,6 @@
 
 use serde::{Deserialize, Serialize};
 
-
 pub mod type_uri {
     pub const FORWARD: &str = "https://didcomm.org/routing/1.0/forward";
     pub const PICKUP_STATUS_REQ: &str = "https://didcomm.org/messagepickup/2.0/status";
@@ -25,17 +24,17 @@ pub struct ForwardMsg {
 
 impl ForwardMsg {
     pub fn default_alice() -> ForwardMsg {
-        ForwardMsg { 
-            _type: type_uri::FORWARD.to_owned(), 
+        ForwardMsg {
+            _type: type_uri::FORWARD.to_owned(),
             recipient_key: "Alice".to_owned(),
-            message: "Hello!".to_owned()
+            message: "Hello!".to_owned(),
         }
     }
     pub fn new(recipient_key: &str, message: &str) -> ForwardMsg {
-        ForwardMsg { 
+        ForwardMsg {
             _type: type_uri::FORWARD.to_string(),
             recipient_key: recipient_key.to_string(),
-            message: message.to_string()
+            message: message.to_string(),
         }
     }
 }

@@ -3,9 +3,9 @@
 
 pub mod database;
 
-use database::get_db_pool;
 use crate::didcomm_types::ForwardMsg;
 use async_trait::async_trait;
+use database::get_db_pool;
 
 #[cfg(any(
     not(any(feature = "any_db", feature = "postgres_db", feature = "mysql_db")),
@@ -18,8 +18,7 @@ compile_error!("Pick any one of \"any_db\", \"postgresql_db\", \"mysql_db\" feat
 
 #[cfg(feature = "mysql_db")]
 pub async fn init() -> sqlx::MySqlPool {
-    let pool = get_db_pool().await;
-    pool 
+    get_db_pool().await
 }
 
 #[async_trait]

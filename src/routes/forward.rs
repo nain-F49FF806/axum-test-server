@@ -1,14 +1,18 @@
 // Copyright 2023 Naian G.
 // SPDX-License-Identifier: Apache-2.0
 
-use axum::{Json, extract::State};
 use crate::didcomm_types::ForwardMsg;
 use crate::storage::MediatorPersistence;
+use axum::{extract::State, Json};
+use log::{debug, info};
 use std::sync::Arc;
-use log::{info, debug};
 
-pub async fn handle_forward<T>(State(storage): State<Arc<T>>, Json(forward_msg): Json<ForwardMsg>) -> Json<ForwardMsg> 
-    where T: MediatorPersistence
+pub async fn handle_forward<T>(
+    State(storage): State<Arc<T>>,
+    Json(forward_msg): Json<ForwardMsg>,
+) -> Json<ForwardMsg>
+where
+    T: MediatorPersistence,
 {
     info!("Persisting forward message");
     debug!("{forward_msg:#?}");
@@ -18,7 +22,7 @@ pub async fn handle_forward<T>(State(storage): State<Arc<T>>, Json(forward_msg):
 
 #[cfg(test)]
 mod tests {
-    use crate::{storage::database::get_db_pool, didcomm_types::ForwardMsg};
+    use crate::{didcomm_types::ForwardMsg, storage::database::get_db_pool};
 
     #[tokio::test]
     async fn test_forward_msg_persist() {

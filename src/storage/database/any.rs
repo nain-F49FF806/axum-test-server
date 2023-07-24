@@ -6,17 +6,16 @@ use sqlx::AnyPool;
 
 /// Gives a connection pool based on DATABASE_URL in the .env file
 /// Could be Postgres (postgres://), Mysql(mysql://) or Sqlite(sqlite://)
-pub async fn get_db_pool () -> AnyPool {
+pub async fn get_db_pool() -> AnyPool {
     let _ = dotenvy::dotenv();
-    let database_url = 
-        std::env::var("DATABASE_URL").expect("Required environment variable DATABASE_URL on command line or in .env!");
+    let database_url = std::env::var("DATABASE_URL")
+        .expect("Required environment variable DATABASE_URL on command line or in .env!");
     sqlx::any::install_default_drivers();
     AnyPoolOptions::new()
         .connect(&database_url)
         .await
         .expect("Failed to connect to database!")
 }
-
 
 #[cfg(test)]
 mod tests {
