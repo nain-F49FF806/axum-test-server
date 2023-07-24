@@ -3,11 +3,13 @@
 
 use axum::{Json, extract::State};
 use crate::didcomm_types::ForwardMsg;
-use crate::storage::Storage;
+use crate::storage::MediatorPersistence;
 use std::sync::Arc;
 use log::{info, debug};
 
-pub async fn handle_forward(State(storage): State<Arc<Storage>>, Json(forward_msg): Json<ForwardMsg>) -> Json<ForwardMsg> {
+pub async fn handle_forward<T>(State(storage): State<Arc<T>>, Json(forward_msg): Json<ForwardMsg>) -> Json<ForwardMsg> 
+    where T: MediatorPersistence
+{
     info!("Persisting forward message");
     debug!("{forward_msg:#?}");
     storage.persist_forward_message(&forward_msg).await;
@@ -16,7 +18,7 @@ pub async fn handle_forward(State(storage): State<Arc<Storage>>, Json(forward_ms
 
 #[cfg(test)]
 mod tests {
-    use crate::{database::get_db_pool, didcomm_types::ForwardMsg};
+    use crate::{storage::database::get_db_pool, didcomm_types::ForwardMsg};
 
     #[tokio::test]
     async fn test_forward_msg_persist() {

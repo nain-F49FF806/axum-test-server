@@ -4,11 +4,13 @@ use crate::routes::hello_world;
 use crate::routes::json;
 use crate::routes::json::respond_message_json;
 use crate::routes::forward::handle_forward;
-use crate::storage::Storage;
+use crate::storage::MediatorPersistence;
 use axum::{routing::get, routing::post, Router};
 use std::sync::Arc;
 
-pub fn create_router(storage: Storage) -> Router {
+pub fn create_router<T>(storage: T) -> Router 
+    where T: MediatorPersistence
+{
     Router::new()
         .route(
             "/",
@@ -20,7 +22,7 @@ pub fn create_router(storage: Storage) -> Router {
         )
         .route(
             "/forward",
-            post(handle_forward),
+            post(handle_forward::<T>),
         )
         .with_state(Arc::new(storage))
 }
