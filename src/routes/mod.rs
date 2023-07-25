@@ -4,3 +4,4 @@
 pub mod forward;
 pub mod hello_world;
 pub mod json;
+pub mod pickup;
