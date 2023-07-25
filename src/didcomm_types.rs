@@ -50,8 +50,6 @@ pub enum PickupMsgEnum {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PickupStatusMsg {
-    #[serde(rename = "@type")]
-    _type: String,
     pub message_count: u32,
     pub recipient_key: String,
 }
@@ -59,38 +57,33 @@ pub struct PickupStatusMsg {
 impl PickupStatusMsg {
     pub fn new(message_count: u32, recipient_key: &str) -> PickupStatusMsg {
         PickupStatusMsg {
-            _type: type_uri::PICKUP_STATUS.to_owned(),
             message_count: message_count,
             recipient_key: recipient_key.to_owned(),
         }
     }
-    pub fn custom_type(self, _type: String) -> PickupStatusMsg {
-        PickupStatusMsg { 
-            _type:  _type,
-             message_count: self.message_count, 
-             recipient_key: self.recipient_key, 
-        }
-    }
+    // pub fn custom_type(self, _type: String) -> PickupStatusMsg {
+    //     PickupStatusMsg { 
+    //         _type:  _type,
+    //          message_count: self.message_count, 
+    //          recipient_key: self.recipient_key, 
+    //     }
+    // }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PickupStatusReqMsg {
-    #[serde(rename = "@type")]
-    _type: String,
     pub recipient_key: String,
 }
 
 impl PickupStatusReqMsg {
     pub fn new(recipient_key: &str) -> PickupStatusReqMsg {
         PickupStatusReqMsg {
-            _type: type_uri::PICKUP_STATUS_REQ.to_owned(),
             recipient_key: recipient_key.to_owned(),
         }
     }
-    pub fn custom_type(self, _type: String) -> PickupStatusReqMsg {
-        PickupStatusReqMsg { 
-            _type:  _type,
-             recipient_key: self.recipient_key, 
-        }
-    }
+    // pub fn custom_type(self, _type: String) -> PickupStatusReqMsg {
+    //     PickupStatusReqMsg { 
+    //          recipient_key: self.recipient_key, 
+    //     }
+    // }
 }
