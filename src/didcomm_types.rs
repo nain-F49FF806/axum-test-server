@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use serde::{Deserialize, Serialize};
+use serde_with::skip_serializing_none;
 
 pub mod type_uri {
     pub const FORWARD: &str = "https://didcomm.org/routing/1.0/forward";
@@ -48,6 +49,7 @@ pub enum PickupMsgEnum {
     PickupStatusReqMsg(PickupStatusReqMsg),
 }
 
+#[skip_serializing_none]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PickupStatusMsg {
     pub message_count: u32,
@@ -63,6 +65,7 @@ impl PickupStatusMsg {
     }
 }
 
+#[skip_serializing_none]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PickupStatusReqMsg {
     pub recipient_key: Option<String>,

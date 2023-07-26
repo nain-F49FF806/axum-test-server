@@ -20,6 +20,7 @@ dotenvy = "0.15.7"
 env_logger = "0.10.0"
 log = "0.4.19"
 serde = { version = "1.0.164", features = ["derive"] }
+serde_with = "3.1.0"
 sqlx = { version = "0.7.1", features = ["runtime-tokio"], optional = true }
 tokio = { version = "1.28.2", features = ["rt-multi-thread", "macros"] }
 
