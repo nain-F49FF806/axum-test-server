@@ -11,14 +11,20 @@ pub async fn handle_pickup<T: MediatorPersistence>(
     Json(pickup_message): Json<PickupMsgEnum>,
 ) -> Json<PickupMsgEnum> {
 
-
-    if let PickupMsgEnum::PickupStatusReqMsg(status_request) = pickup_message {
-        let status = PickupStatusMsg::new(5, &status_request.recipient_key);
-        info!("StatusReqMsg");
-        Json(PickupMsgEnum::PickupStatusMsg(status))
-    } else {
-        let status = PickupStatusMsg::new(10, "");
-        info!("Something else");
-        Json(PickupMsgEnum::PickupStatusMsg(status))
+    match &pickup_message {
+        PickupMsgEnum::PickupStatusReqMsg(status_request) => {
+            info!("Received StatusReqMsg {:#?}", &status_request);
+            let message_count = storage.retrieve_pending_message_count(&status_request.recipient_key).await;
+            let status = PickupStatusMsg::new(message_count.try_into().unwrap(), &status_request.recipient_key);
+            info!("Sending StatusMsg {:#?}", &status);
+            Json(PickupMsgEnum::PickupStatusMsg(status))
+        }
+        PickupMsgEnum::PickupStatusMsg(status) => {
+            info!("Received StatusMsg {:#?}", &status);
+            let message_count = storage.retrieve_pending_message_count(&status.recipient_key).await;
+            let status = PickupStatusMsg::new(message_count.try_into().unwrap(), &status.recipient_key);
+            info!("Sending StatusMsg {:#?}", &status);
+            Json(PickupMsgEnum::PickupStatusMsg(status))
+        }
     }
 }
