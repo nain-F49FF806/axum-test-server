@@ -51,34 +51,27 @@ pub enum PickupMsgEnum {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PickupStatusMsg {
     pub message_count: u32,
-    pub recipient_key: String,
+    pub recipient_key: Option<String>,
 }
 
 impl PickupStatusMsg {
-    pub fn new(message_count: u32, recipient_key: &str) -> PickupStatusMsg {
+    pub fn new(message_count: u32, recipient_key: Option<String>) -> PickupStatusMsg {
         PickupStatusMsg {
             message_count: message_count,
-            recipient_key: recipient_key.to_owned(),
+            recipient_key: recipient_key,
         }
     }
-    // pub fn custom_type(self, _type: String) -> PickupStatusMsg {
-    //     PickupStatusMsg { 
-    //         _type:  _type,
-    //          message_count: self.message_count, 
-    //          recipient_key: self.recipient_key, 
-    //     }
-    // }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PickupStatusReqMsg {
-    pub recipient_key: String,
+    pub recipient_key: Option<String>,
 }
 
 impl PickupStatusReqMsg {
-    pub fn new(recipient_key: &str) -> PickupStatusReqMsg {
+    pub fn new(recipient_key: Option<String>) -> PickupStatusReqMsg {
         PickupStatusReqMsg {
-            recipient_key: recipient_key.to_owned(),
+            recipient_key: recipient_key,
         }
     }
     // pub fn custom_type(self, _type: String) -> PickupStatusReqMsg {

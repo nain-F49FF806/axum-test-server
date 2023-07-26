@@ -26,28 +26,28 @@ async fn handle_pickup_status_req<T: MediatorPersistence>(
 ) -> Json<PickupMsgEnum> {
     info!("Received {:#?}", &status_request);
     let message_count = storage
-        .retrieve_pending_message_count(&status_request.recipient_key)
+        .retrieve_pending_message_count(status_request.recipient_key.as_ref())
         .await;
-    let status = PickupStatusMsg::new(
-        message_count.try_into().unwrap(),
-        &status_request.recipient_key,
-    );
+    let status = PickupStatusMsg {
+        message_count: message_count,
+        recipient_key: status_request.recipient_key.to_owned(),
+    };
     info!("Sending {:#?}", &status);
     Json(PickupMsgEnum::PickupStatusMsg(status))
 }
 
 async fn handle_pickup_status<T: MediatorPersistence>(
     status: &PickupStatusMsg,
-    storage: Arc<T>
+    storage: Arc<T>,
 ) -> Json<PickupMsgEnum> {
     info!("Received {:#?}", &status);
     let message_count = storage
-        .retrieve_pending_message_count(&status.recipient_key)
+        .retrieve_pending_message_count(status.recipient_key.as_ref())
         .await;
-    let status = PickupStatusMsg::new(
-        message_count.try_into().unwrap(),
-        &status.recipient_key
-    );
+    let status = PickupStatusMsg {
+        message_count: message_count,
+        recipient_key: status.recipient_key.to_owned(),
+    };
     info!("Sending {:#?}", &status);
     Json(PickupMsgEnum::PickupStatusMsg(status))
 }
