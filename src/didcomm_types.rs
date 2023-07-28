@@ -59,8 +59,8 @@ pub struct PickupStatusMsg {
 impl PickupStatusMsg {
     pub fn new(message_count: u32, recipient_key: Option<String>) -> PickupStatusMsg {
         PickupStatusMsg {
-            message_count: message_count,
-            recipient_key: recipient_key,
+            message_count,
+            recipient_key,
         }
     }
 }
@@ -74,7 +74,7 @@ pub struct PickupStatusReqMsg {
 impl PickupStatusReqMsg {
     pub fn new(recipient_key: Option<String>) -> PickupStatusReqMsg {
         PickupStatusReqMsg {
-            recipient_key: recipient_key,
+            recipient_key,
         }
     }
     // pub fn custom_type(self, _type: String) -> PickupStatusReqMsg {

@@ -29,7 +29,7 @@ async fn handle_pickup_status_req<T: MediatorPersistence>(
         .retrieve_pending_message_count(status_request.recipient_key.as_ref())
         .await;
     let status = PickupStatusMsg {
-        message_count: message_count,
+        message_count,
         recipient_key: status_request.recipient_key.to_owned(),
     };
     info!("Sending {:#?}", &status);
@@ -45,7 +45,7 @@ async fn handle_pickup_status<T: MediatorPersistence>(
         .retrieve_pending_message_count(status.recipient_key.as_ref())
         .await;
     let status = PickupStatusMsg {
-        message_count: message_count,
+        message_count,
         recipient_key: status.recipient_key.to_owned(),
     };
     info!("Sending {:#?}", &status);
