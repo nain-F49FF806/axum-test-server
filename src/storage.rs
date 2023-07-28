@@ -26,6 +26,12 @@ pub async fn init() -> sqlx::MySqlPool {
 pub trait MediatorPersistence: Send + Sync + 'static {
     async fn persist_forward_message(&self, forward_msg: &ForwardMsg);
     async fn retrieve_pending_message_count(&self, recipient_key: Option<&String>) -> u32;
+    // async fn retrieve_pending_messages(
+    //     &self,
+    //     limit: u32,
+    //     recipient_key: Option<&String>,
+    // ) -> Vec<ForwardMsg>;
+    // async fn mark_messages_recieved(&self, message_id: Vec<u32>);
 }
 
 #[cfg(feature = "mysql_db")]
@@ -43,7 +49,8 @@ impl MediatorPersistence for sqlx::MySqlPool {
         // This needs to be i32 because mysql BIGINT can't be directly converted to u32
         let message_count: i32 = sqlx::query(
             "SELECT COUNT(*)
-            FROM forward_raw WHERE recipient_key = ?;",
+                FROM forward_raw
+                WHERE recipient_key = ? AND received = 0;"
         )
             .bind(recipient_key)
             .fetch_one(self)
