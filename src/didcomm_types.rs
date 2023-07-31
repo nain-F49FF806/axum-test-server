@@ -47,6 +47,16 @@ pub enum PickupMsgEnum {
     PickupStatusMsg(PickupStatusMsg),
     #[serde(rename = "https://didcomm.org/messagepickup/2.0/status-request")]
     PickupStatusReqMsg(PickupStatusReqMsg),
+    #[serde(rename = "https://didcomm.org/messagepickup/2.0/delivery-request")]
+    PickupDeliveryReq(PickupDeliveryReqMsg),
+    #[serde(rename = "https://didcomm.org/messagepickup/2.0/delivery")]
+    PickupDelivery(PickupDeliveryMsg),
+    #[serde(rename = "https://didcomm.org/messagepickup/2.0/messages-received")]
+    MessageReceived(MessageReceivedMsg),
+    #[serde(rename = "https://didcomm.org/messagepickup/2.0/live-delivery-change")]
+    LiveDeliveryChange(LiveDeliveryChangeMsg),
+    #[serde(rename = "https://didcomm.org/notification/1.0/problem-report")]
+    ProblemReport(ProblemReportMsg),
 }
 
 #[skip_serializing_none]
@@ -73,13 +83,53 @@ pub struct PickupStatusReqMsg {
 
 impl PickupStatusReqMsg {
     pub fn new(recipient_key: Option<String>) -> PickupStatusReqMsg {
-        PickupStatusReqMsg {
-            recipient_key,
-        }
+        PickupStatusReqMsg { recipient_key }
     }
     // pub fn custom_type(self, _type: String) -> PickupStatusReqMsg {
-    //     PickupStatusReqMsg { 
-    //          recipient_key: self.recipient_key, 
+    //     PickupStatusReqMsg {
+    //          recipient_key: self.recipient_key,
     //     }
     // }
+}
+
+#[skip_serializing_none]
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PickupDeliveryReqMsg {
+    pub limit: u32,
+    pub recipient_key: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct __Data {
+    base64: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct _Attach {
+    pub id: String,
+    #[serde(rename = "data")]
+    pub __data: __Data,
+}
+
+#[skip_serializing_none]
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PickupDeliveryMsg {
+    pub recipient_key: Option<String>,
+    #[serde(rename = "~attach")]
+    pub _attach: Vec<_Attach>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct LiveDeliveryChangeMsg {
+    pub live_delivery: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ProblemReportMsg {
+    pub description: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MessageReceivedMsg {
+    pub message_id_list: Vec<String>,
 }
