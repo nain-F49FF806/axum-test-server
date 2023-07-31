@@ -57,20 +57,20 @@ async fn handle_pickup_status<T: MediatorPersistence>(
 }
 
 // Returns global status message for user (not restricted to recipient key)
-async fn handle_pickup_default<T: MediatorPersistence>(
-    storage: Arc<T>,
-) -> Json<PickupMsgEnum> {
+// async fn handle_pickup_default<T: MediatorPersistence>(
+//     storage: Arc<T>,
+// ) -> Json<PickupMsgEnum> {
     
-    let message_count = storage
-        .retrieve_pending_message_count(None)
-        .await;
-    let status = PickupStatusMsg {
-        message_count,
-        recipient_key: None
-    };
-    info!("Sending {:#?}", &status);
-    Json(PickupMsgEnum::PickupStatusMsg(status))
-}
+//     let message_count = storage
+//         .retrieve_pending_message_count(None)
+//         .await;
+//     let status = PickupStatusMsg {
+//         message_count,
+//         recipient_key: None
+//     };
+//     info!("Sending {:#?}", &status);
+//     Json(PickupMsgEnum::PickupStatusMsg(status))
+// }
 
 async fn handle_pickup_type_not_implemented(
 ) -> Json<PickupMsgEnum> {
