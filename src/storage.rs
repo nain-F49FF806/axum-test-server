@@ -46,17 +46,31 @@ impl MediatorPersistence for sqlx::MySqlPool {
             .unwrap();
     }
     async fn retrieve_pending_message_count(&self, recipient_key: Option<&String>) -> u32 {
-        // This needs to be i32 because mysql BIGINT can't be directly converted to u32
-        let message_count: i32 = sqlx::query(
-            "SELECT COUNT(*)
-                FROM forward_raw
-                WHERE recipient_key = ? AND received = 0;"
-        )
-            .bind(recipient_key)
-            .fetch_one(self)
-            .await
-            .unwrap()
-            .get("COUNT(*)");
-        message_count.try_into().unwrap()
+        if let Some(recipient_key) = recipient_key {
+            // This needs to be i32 because mysql BIGINT can't be directly converted to u32
+            let message_count: i32 = sqlx::query(
+                "SELECT COUNT(*)
+                    FROM forward_raw
+                    WHERE recipient_key = ? AND received = 0;"
+            )
+                .bind(recipient_key)
+                .fetch_one(self)
+                .await
+                .unwrap()
+                .get("COUNT(*)");
+            message_count.try_into().unwrap()   
+        }
+        else {
+            let message_count: i32 = sqlx::query(
+                "SELECT COUNT(*)
+                    FROM forward_raw
+                    WHERE received = 0;"
+            )
+                .fetch_one(self)
+                .await
+                .unwrap()
+                .get("COUNT(*)");
+            message_count.try_into().unwrap()  
+        }
     }
 }
