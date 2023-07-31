@@ -37,8 +37,11 @@ fn test_status_request_returns_a_valid_status() {
     );
     let res = client.post(endpoint).json(&status_request).send().unwrap();
     let res_msg = res.json::<serde_json::Value>().unwrap();
-    assert_eq!("https://didcomm.org/messagepickup/2.0/status", res_msg["@type"]);
-    assert_eq!(true, res_msg.get("message_count").is_some());
+    assert_eq!(
+        "https://didcomm.org/messagepickup/2.0/status",
+        res_msg["@type"]
+    );
+    assert!(res_msg.get("message_count").is_some());
 }
 
 #[test]
@@ -55,8 +58,11 @@ fn test_status_request_for_key_returns_a_valid_status() {
     );
     let res = client.post(endpoint).json(&status_request).send().unwrap();
     let res_msg = res.json::<serde_json::Value>().unwrap();
-    assert_eq!("https://didcomm.org/messagepickup/2.0/status", res_msg["@type"]);
-    assert_eq!(true, res_msg.get("message_count").is_some());
+    assert_eq!(
+        "https://didcomm.org/messagepickup/2.0/status",
+        res_msg["@type"]
+    );
+    assert!(res_msg.get("message_count").is_some());
     assert_eq!(RECIPIENT_KEY, res_msg["recipient_key"]);
 }
 
@@ -85,7 +91,6 @@ fn test_status_request_for_key_returns_a_valid_status() {
 //     "limit": 1
 // }
 
-
 // {
 //     "@id": "123456781",
 //     "~thread": {
@@ -106,14 +111,12 @@ fn test_status_request_for_key_returns_a_valid_status() {
 //     "message_id_list": ["123","456"]
 // }
 
-
 // Multiple Recipients
 
-// // If a message arrives at a Mediator addressed to multiple Recipients, 
-// // the message MUST be queued for each Recipient independently. 
-// // If one of the addressed Recipients retrieves a message and indicates it has been received, 
+// // If a message arrives at a Mediator addressed to multiple Recipients,
+// // the message MUST be queued for each Recipient independently.
+// // If one of the addressed Recipients retrieves a message and indicates it has been received,
 // // that message MUST still be held and then removed by the other addressed Recipients.
-
 
 // {
 //     "@type": "https://didcomm.org/messagepickup/2.0/live-delivery-change",
@@ -127,4 +130,3 @@ fn test_status_request_for_key_returns_a_valid_status() {
 //     },
 //     "description": "Connection does not support Live Delivery"
 // }
-  
