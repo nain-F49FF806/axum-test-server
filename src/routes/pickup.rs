@@ -1,6 +1,6 @@
 // Copyright 2023 Naian G.
 // SPDX-License-Identifier: Apache-2.0
-use crate::didcomm_types::{PickupMsgEnum, PickupStatusMsg, PickupStatusReqMsg};
+use crate::didcomm_types::{PickupMsgEnum, PickupStatusMsg, PickupStatusReqMsg, ProblemReportMsg};
 use crate::storage::MediatorPersistence;
 use axum::{extract::State, Json};
 use log::info;
@@ -16,6 +16,10 @@ pub async fn handle_pickup<T: MediatorPersistence>(
         }
         PickupMsgEnum::PickupStatusMsg(status) => {
             handle_pickup_status(status, storage).await
+        }
+        _ => {
+            info!("Received {:#?}", &pickup_message);
+            handle_pickup_type_not_implemented().await
         }
     }
 }
@@ -50,4 +54,30 @@ async fn handle_pickup_status<T: MediatorPersistence>(
     };
     info!("Sending {:#?}", &status);
     Json(PickupMsgEnum::PickupStatusMsg(status))
+}
+
+// Returns global status message for user (not restricted to recipient key)
+async fn handle_pickup_default<T: MediatorPersistence>(
+    storage: Arc<T>,
+) -> Json<PickupMsgEnum> {
+    
+    let message_count = storage
+        .retrieve_pending_message_count(None)
+        .await;
+    let status = PickupStatusMsg {
+        message_count,
+        recipient_key: None
+    };
+    info!("Sending {:#?}", &status);
+    Json(PickupMsgEnum::PickupStatusMsg(status))
+}
+
+async fn handle_pickup_type_not_implemented(
+) -> Json<PickupMsgEnum> {
+    
+    let problem = ProblemReportMsg {
+        description: "This pickup request type not yet implemented.\n Please try again later".to_owned(),
+    };
+    info!("Sending {:#?}", &problem);
+    Json(PickupMsgEnum::ProblemReport(problem))
 }
