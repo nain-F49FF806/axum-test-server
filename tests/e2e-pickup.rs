@@ -78,7 +78,58 @@ fn test_status_request_for_key_returns_a_valid_status() {
 //     "live_delivery": false
 // }
 
+#[test]
+fn test_delivery_request_returns_status_when_queue_empty() {
+    let client = reqwest::blocking::Client::new();
+    let endpoint = format!("{BASE_URL}/pickup");
+    let delivery_req = json!(
+        {
+            "@id": "123456781",
+            "@type": "https://didcomm.org/messagepickup/2.0/delivery-request",
+            "limit": 10,
+            "recipient_key": "<key for messages>"
+        }
+    );
 
+    let res = client.post(endpoint).json(&delivery_req).send().unwrap();
+    if let Err(err) = res.error_for_status_ref() {
+        panic!("Error response status {:#?}", err);
+    }
+    let res_msg = res.json::<serde_json::Value>().unwrap();
+    assert_eq!(
+        "https://didcomm.org/messagepickup/2.0/status",
+        res_msg["@type"]
+    );
+    assert_eq!(0, res_msg["message_count"]);
+}
+
+#[test]
+fn test_delivery_request() {
+    let client = reqwest::blocking::Client::new();
+    let endpoint = format!("{BASE_URL}/pickup");
+
+    let delivery_request = json!(
+        {
+            "@id": 123,
+            "@type": "https://didcomm.org/messagepickup/2.0/delivery-request",
+            "limit": 10
+        }
+    );
+    let res = client
+        .post(endpoint)
+        .json(&delivery_request)
+        .send()
+        .unwrap();
+    if let Err(err) = res.error_for_status_ref() {
+        panic!("Error response status {:#?}", err);
+    }
+    let res_msg = res.json::<serde_json::Value>().unwrap();
+    assert_eq!(
+        "https://didcomm.org/messagepickup/2.0/delivery",
+        res_msg["@type"]
+    );
+    // assert_ne!(0, res_msg["message_count"]);
+}
 // {
 //     "@id": "123456781",
 //     "@type": "https://didcomm.org/messagepickup/2.0/delivery-request",
