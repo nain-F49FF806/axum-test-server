@@ -16,7 +16,7 @@ where
 {
     info!("Persisting forward message");
     debug!("{forward_msg:#?}");
-    storage.persist_forward_message(&forward_msg).await;
+    let _ = storage.persist_forward_message(&forward_msg).await;
     Json(forward_msg)
 }
 
