@@ -27,8 +27,10 @@ pub async fn init() -> sqlx::MySqlPool {
 
 #[async_trait]
 pub trait MediatorPersistence: Send + Sync + 'static {
-    async fn create_account(&self, auth_pubkey: String) -> Result<(), String>;
+    async fn create_account(&self, auth_pubkey: &String) -> Result<(), String>;
     // async fn vaporize_account(&self, auth_pubkey: String);
+    async fn add_recipient(&self, auth_pubkey: &String, recipient_key: &String) ->  Result<(), String>;
+    async fn remove_recipient(&self, auth_pubkey: &String, recipient_key: &String) ->  Result<(), String>;
     async fn persist_forward_message(&self, forward_msg: &ForwardMsg) -> Result<(), String>;
     async fn retrieve_pending_message_count(&self, recipient_key: Option<&String>) -> u32;
     // async fn retrieve_pending_messages(
@@ -42,14 +44,14 @@ pub trait MediatorPersistence: Send + Sync + 'static {
 #[cfg(feature = "mysql_db")]
 #[async_trait]
 impl MediatorPersistence for sqlx::MySqlPool {
-    async fn create_account(&self, auth_pubkey: String) -> Result<(), String> {
+    async fn create_account(&self, auth_pubkey: &String) -> Result<(), String> {
         info!("Adding new account to database with auth_pubkey {:#?}", &auth_pubkey);
         let insert_res = sqlx::query("INSERT INTO accounts (auth_pubkey) VALUES (?);")
             .bind(&auth_pubkey)
             .execute(self)
             .await;
         if let Err(err) = insert_res {
-            info!("Error during creating new account {:#?}", err);
+            info!("Error during creating new account, {:#?}", err);
             return Err(format!("{:#}", err))
         };
         let account: Vec<u8> = sqlx::query("SELECT (account) FROM accounts WHERE auth_pubkey = ?;")
@@ -205,4 +207,68 @@ impl MediatorPersistence for sqlx::MySqlPool {
     //     }
     //     messages
     // }
+    async fn add_recipient(&self, auth_pubkey: &String, recipient_key: &String) ->  Result<(), String> {
+        info!("Adding recipient_key to account with auth_pubkey {:#?}", auth_pubkey);
+        let account: Vec<u8> = match 
+            sqlx::query("SELECT (account) FROM accounts WHERE auth_pubkey = ?;")
+            .bind(&auth_pubkey)
+            .fetch_one(self)
+            .await
+        {
+            Ok(account_row) => {account_row.get("account") }
+            Err(err) => {
+                info!("Error while finding account, {:#?}", err);
+                return Err(format!("{:#}", err))
+            }
+        };
+        info!(
+            "Found matching account {:x?}. Proceeding with attempt to add recipient recipient_key {:#?} ",
+            account,
+            recipient_key
+        );
+        match sqlx::query("INSERT INTO recipients (account, recipient_key) VALUES (?, ?);")
+            .bind(&account)
+            .bind(&recipient_key)
+            .execute(self)
+            .await
+        {
+            Ok(_result) => Ok(()),
+            Err(err) => {
+                info!("Error while adding recipient, {:#}", err);
+                Err(format!("{:#}", err))
+            }
+        }
+    }
+    async fn remove_recipient(&self, auth_pubkey: &String, recipient_key: &String) ->  Result<(), String> {
+        info!("Removing recipient_key from account with auth_pubkey {:#?}", auth_pubkey);
+        let account: Vec<u8> = match 
+            sqlx::query("SELECT (account) FROM accounts WHERE auth_pubkey = ?;")
+            .bind(&auth_pubkey)
+            .fetch_one(self)
+            .await
+        {
+            Ok(account_row) => {account_row.get("account") }
+            Err(err) => {
+                info!("Error while finding account, {:#?}", err);
+                return Err(format!("{:#}", err))
+            }
+        };
+        info!(
+            "Found matching account {:x?}. Proceeding with attempt to remove recipient recipient_key {:#?} ",
+            account,
+            recipient_key
+        );
+        match sqlx::query("DELETE FROM recipients WHERE (account = ?) AND (recipient_key = ?);")
+            .bind(&account)
+            .bind(&recipient_key)
+            .execute(self)
+            .await
+        {
+            Ok(_result) => Ok(()),
+            Err(err) => {
+                info!("Error while removing recipient, {:#}", err);
+                Err(format!("{:#}", err))
+            }
+        }
+    }
 }
