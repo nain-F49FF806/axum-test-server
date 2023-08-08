@@ -141,11 +141,13 @@ fn test_delivery_request_returns_status_when_queue_empty() {
     initialize();
     let client = reqwest::blocking::Client::new();
     let endpoint = format!("{BASE_URL}/pickup");
+    // Use non existing recipient key to test 0 waiting messages case
     let delivery_req = json!(
         {
             "@id": "123456781",
             "@type": "https://didcomm.org/messagepickup/2.0/delivery-request",
             "auth_pubkey": AUTH_PUBKEY,
+
             "limit": 10,
             "recipient_key": "<key for messages>"
         }
@@ -168,7 +170,6 @@ fn test_delivery_request() {
     initialize();
     let client = reqwest::blocking::Client::new();
     let endpoint = format!("{BASE_URL}/pickup");
-
     let delivery_request = json!(
         {
             "@id": 123,

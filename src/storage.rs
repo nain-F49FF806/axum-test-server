@@ -34,11 +34,12 @@ pub trait MediatorPersistence: Send + Sync + 'static {
     async fn list_recipient_keys(&self, auth_pubkey: &str) -> Result<Vec<String>, String>;
     async fn persist_forward_message(&self, recipient_key: &str, message_data: &str) -> Result<(), String>;
     async fn retrieve_pending_message_count(&self, auth_pubkey: &str, recipient_key: Option<&String>) -> Result<u32, String>;
-    // async fn retrieve_pending_messages(
-    //     &self,
-    //     limit: u32,
-    //     recipient_key: Option<&String>,
-    // ) -> Vec<(u32, Vec<u8>)>;
+    async fn retrieve_pending_messages(
+        &self,
+        auth_pubkey: &str,
+        limit: u32,
+        recipient_key: Option<&String>,
+    ) -> Result<Vec<(u32, Vec<u8>)>, String>;
     // async fn mark_messages_received(&self, message_id: Vec<u32>);
 }
 
@@ -162,42 +163,68 @@ impl MediatorPersistence for sqlx::MySqlPool {
         info!("Total message count of all requested recipients {:#?}", &total_message_count);
         Ok(total_message_count)
     }
-    // async fn retrieve_pending_messages(&self, limit: u32, recipient_key: Option<&String>) -> Vec<(u32, Vec<u8>)> {
-    //     info!("recipient key request {:#?}", recipient_key);
-    //     let mut recipient_rows = if let Some(recipient_key) = recipient_key {
-    //         sqlx::query(
-    //             "SELECT * FROM recipients WHERE recipient_key = ?"
-    //         )
-    //             .bind(recipient_key)
-    //             .fetch(self)
-    //     }
-    //     else {
-    //         sqlx::query(
-    //             "SELECT * FROM recipients"
-    //         )
-    //             .bind(recipient_key)
-    //             .fetch(self)
-    //     };
-    //     let mut messages: Vec<(u32, Vec<u8>)> = Vec::new();
-    //     let i: u32 = 0;
-    //     while let Some(recipient_row) = recipient_rows.try_next().await.unwrap() {
-    //         if i>= limit {break;}
-    //         let recipient: Vec<u8> = recipient_row.get("recipient");  // binary decode
-    //         let mut message_rows = sqlx::query(
-    //             "SELECT * FROM messages WHERE recipient = ?"
-    //         )
-    //         .bind(&recipient).fetch(self);
-    //         while let Some(message_row) = message_rows.try_next().await.unwrap() {
-    //             let id: u32 = message_row.get("id");
-    //             let msg : Vec<u8> = message_row.get("message_data");
-    //             info!("id {:#?}", id);
-    //             info!("recipient {:x?}", recipient);
-    //             info!("message {:x?}", msg); 
-    //             messages.push((id, msg));
-    //         }
-    //     }
-    //     messages
-    // }
+    async fn retrieve_pending_messages(
+        &self,
+        auth_pubkey: &str,
+        limit: u32,
+        recipient_key: Option<&String>,
+    ) -> Result<Vec<(u32, Vec<u8>)>, String> {
+        info!("Processing retrieve for messages to recipient_key {:#?} of auth_pubkey {:#?}", recipient_key, auth_pubkey);
+        let account: Vec<u8> = match 
+            sqlx::query("SELECT (account) FROM accounts WHERE auth_pubkey = ?;")
+            .bind(auth_pubkey)
+            .fetch_one(self)
+            .await
+        {
+            Ok(account_row) => {account_row.get("account") }
+            Err(err) => {
+                info!("Error while finding account, {:#?}", err);
+                return Err(format!("{:#}", err))
+            }
+        };
+        info!("Finding recipients associated with account: {:x?}", account);
+        let recipient_rows = if let Some(recipient_key) = recipient_key {
+            sqlx::query(
+                "SELECT * FROM recipients WHERE (recipient_key = ?) AND (account = ?)"
+            )
+                .bind(recipient_key)
+                .bind(account)
+                .fetch_all(self)
+                .await.unwrap()
+        }
+        else {
+            sqlx::query(
+                "SELECT * FROM recipients WHERE (account = ?)"
+            )
+                .bind(account)
+                .fetch_all(self)
+                .await
+                .unwrap()
+        };
+        let mut messages: Vec<(u32, Vec<u8>)> = Vec::new();
+        for recipient_row in recipient_rows.into_iter() {
+            let recipient: Vec<u8> = recipient_row.get("recipient");  // binary decode
+            let mut message_rows = sqlx::query(
+                "SELECT * FROM messages WHERE recipient = ?"
+            )
+            .bind(&recipient).fetch(self);
+            info!("Retrieving messages for recipient {:x?}", recipient);
+            while let Some(message_row) = message_rows.try_next().await.unwrap() {
+                let id: u32 = message_row.get("id");
+                let msg : Vec<u8> = message_row.get("message_data");
+                // debug!("id {:#?}", id);
+                // debug!("recipient {:x?}", recipient);
+                // debug!("message {:x?}", msg); 
+                messages.push((id, msg));
+                if u32::try_from(messages.len()).unwrap() >= limit {
+                    info!("Found enough messages {:#?}", limit);
+                    break;
+                }
+            }
+        }
+        info!("Found total of {:#?} messages ", messages.len());
+        Ok(messages)
+    }
     async fn add_recipient(&self, auth_pubkey: &str, recipient_key: &str) ->  Result<(), String> {
         info!("Adding recipient_key to account with auth_pubkey {:#?}", auth_pubkey);
         let account: Vec<u8> = self.get_account(auth_pubkey).await?;

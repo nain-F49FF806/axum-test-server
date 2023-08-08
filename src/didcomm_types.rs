@@ -1,6 +1,7 @@
 // Copyright 2023 Naian G.
 // SPDX-License-Identifier: Apache-2.0
 
+pub use pickup_delivery_message_structs::*;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
@@ -96,28 +97,36 @@ pub struct PickupStatusReqMsg {
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PickupDeliveryReqMsg {
+    pub auth_pubkey: String,
     pub limit: u32,
     pub recipient_key: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct __Data {
-    base64: String,
-}
+pub mod pickup_delivery_message_structs {
+    use super::{skip_serializing_none, Deserialize, Serialize};
+    use serde_with::{base64::Base64, serde_as};
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct _Attach {
-    pub id: String,
-    #[serde(rename = "data")]
-    pub __data: __Data,
-}
+    #[serde_as]
+    #[derive(Serialize, Deserialize, Debug)]
+    pub struct PickupDeliveryMsgAttachData {
+        #[serde_as(as = "Base64")]
+        pub base64: Vec<u8>,
+    }
 
-#[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug)]
-pub struct PickupDeliveryMsg {
-    pub recipient_key: Option<String>,
-    #[serde(rename = "~attach")]
-    pub _attach: Vec<_Attach>,
+    #[derive(Serialize, Deserialize, Debug)]
+    pub struct PickupDeliveryMsgAttach {
+        pub id: String,
+        #[serde(rename = "data")]
+        pub data: PickupDeliveryMsgAttachData,
+    }
+
+    #[skip_serializing_none]
+    #[derive(Serialize, Deserialize, Debug)]
+    pub struct PickupDeliveryMsg {
+        pub recipient_key: Option<String>,
+        #[serde(rename = "~attach")]
+        pub attach: Vec<PickupDeliveryMsgAttach>,
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug)]
