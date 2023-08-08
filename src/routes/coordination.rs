@@ -121,7 +121,7 @@ pub async fn handle_keylist_query<T: MediatorPersistence>(
         Ok(recipient_keys) => {
             recipient_keys
                 .into_iter()
-                .map(|recipient_key| KeylistItem{recipient_key: recipient_key})
+                .map(|recipient_key| KeylistItem{recipient_key})
                 .collect()
         },
         Err(err) => {
