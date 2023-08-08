@@ -6,9 +6,13 @@ This repo was intended to be a test project to try Rust and Axum features.
 
 Over time it has turned into a ~fully functional aries mediator service supporting the following Aries concepts over ***http*** endpoints.
 
+> **Caveat**: Authentication must be handled at another layer. Integration with [aries-vcx] is intended to enable this.
+
 - [Mediator coordination protocol](https://github.com/hyperledger/aries-rfcs/blob/main/features/0211-route-coordination/README.md)
 - [Core:Routing: Forward Message](https://github.com/hyperledger/aries-rfcs/blob/main/concepts/0094-cross-domain-messaging/README.md#corerouting10forward)
 - [Pickup protocol 2.0](https://github.com/hyperledger/aries-rfcs/tree/main/features/0685-pickup-v2)
+
+[aries-vcx]: https://github.com/hyperledger/aries-vcx
 
 Original readme is available below.
 
