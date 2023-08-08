@@ -125,7 +125,7 @@ impl MediatorPersistence for sqlx::MySqlPool {
             let recipient: Vec<u8> = sqlx::query(
                 "SELECT * FROM recipients WHERE recipient_key = ?"
             )
-            .bind(&recipient_key)
+            .bind(recipient_key)
             .fetch_one(self)
             .await.unwrap()
             .get("recipient");
@@ -135,7 +135,7 @@ impl MediatorPersistence for sqlx::MySqlPool {
                     FROM messages
                     WHERE recipient = ?; -- AND received = 0;"
             )
-            .bind(&recipient)
+            .bind(recipient)
             .fetch_one(self)
             .await
             .unwrap()
@@ -146,7 +146,7 @@ impl MediatorPersistence for sqlx::MySqlPool {
             let mut recipient_rows = sqlx::query(
                 "SELECT * FROM recipients WHERE recipient_key = ?"
             )
-            .bind(&recipient_key)
+            .bind(recipient_key)
             .fetch(self);
             let mut total_message_count: i32 = 0;
             while let Some(recipient_row) = recipient_rows.try_next().await.unwrap() {
@@ -161,7 +161,7 @@ impl MediatorPersistence for sqlx::MySqlPool {
                 .await
                 .unwrap()
                 .get::<i32, &str>("COUNT(*)");
-                total_message_count = total_message_count + message_count;
+                total_message_count += message_count;
             } 
             info!("Total message count of all recipients {:#?}", &total_message_count);
             total_message_count.try_into().unwrap()
