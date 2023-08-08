@@ -2,13 +2,35 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use serde_json::json;
+use std::sync::Once;
+static INIT: Once = Once::new();
 const BASE_URL: &str = "http://localhost:7999";
 
 // Test variables
 const RECIPIENT_KEY: &str = "Anderson Smith n0r3t1";
 
+fn setup_account() {
+    let client = reqwest::blocking::Client::new();
+    let endpoint = format!("{BASE_URL}/coord");
+    let new_account_req = json!(
+        {
+            "@type": "https://didcomm.org/coordinate-mediation/1.0/mediate-request",
+            "auth_pubkey": RECIPIENT_KEY
+        }
+    );
+    let res = client.post(endpoint).json(&new_account_req).send().unwrap();
+    res.error_for_status().unwrap();
+}
+
+pub fn initialize() {
+    INIT.call_once(|| {
+        setup_account();
+    });
+}
+
 #[test]
 fn test_status_request_endpoint_exists() {
+    initialize();
     let client = reqwest::blocking::Client::new();
     let endpoint = format!("{BASE_URL}/pickup");
 
@@ -26,6 +48,7 @@ fn test_status_request_endpoint_exists() {
 
 #[test]
 fn test_status_request_returns_a_valid_status() {
+    initialize();
     let client = reqwest::blocking::Client::new();
     let endpoint = format!("{BASE_URL}/pickup");
 
@@ -46,6 +69,7 @@ fn test_status_request_returns_a_valid_status() {
 
 #[test]
 fn test_status_request_for_key_returns_a_valid_status() {
+    initialize();
     let client = reqwest::blocking::Client::new();
     let endpoint = format!("{BASE_URL}/pickup");
 
@@ -81,6 +105,7 @@ fn test_status_request_for_key_returns_a_valid_status() {
 #[ignore]
 #[test]
 fn test_delivery_request_returns_status_when_queue_empty() {
+    initialize();
     let client = reqwest::blocking::Client::new();
     let endpoint = format!("{BASE_URL}/pickup");
     let delivery_req = json!(
@@ -107,6 +132,7 @@ fn test_delivery_request_returns_status_when_queue_empty() {
 #[ignore]
 #[test]
 fn test_delivery_request() {
+    initialize();
     let client = reqwest::blocking::Client::new();
     let endpoint = format!("{BASE_URL}/pickup");
 
