@@ -74,15 +74,28 @@ async fn handle_pickup_delivery_req<T: MediatorPersistence>(delivery_request: &P
             }
         })
         .collect();
-    (
-        StatusCode::OK, 
-        Json(PickupMsgEnum::PickupDelivery(
-            PickupDeliveryMsg {
-                recipient_key: delivery_request.recipient_key.to_owned(),
-                attach
-            }
-        ))
-    )
+    if !attach.is_empty() { 
+        (
+            StatusCode::OK, 
+            Json(PickupMsgEnum::PickupDelivery(
+                PickupDeliveryMsg {
+                    recipient_key: delivery_request.recipient_key.to_owned(),
+                    attach
+                }
+            ))
+        )
+    } else {
+        // send status message instead
+        (
+            StatusCode::OK, 
+            Json(PickupMsgEnum::PickupStatusMsg(
+                PickupStatusMsg {
+                    message_count: 0,
+                    recipient_key: delivery_request.recipient_key.to_owned(),
+                }
+            ))
+        )
+    }
 }
 // Returns global status message for user (not restricted to recipient key)
 // async fn handle_pickup_default<T: MediatorPersistence>(
