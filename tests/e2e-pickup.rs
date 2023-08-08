@@ -129,7 +129,6 @@ fn test_status_request_for_key_returns_a_valid_status() {
 //     "live_delivery": false
 // }
 
-#[ignore]
 #[test]
 fn test_delivery_request_returns_status_when_queue_empty() {
     initialize();
@@ -157,7 +156,6 @@ fn test_delivery_request_returns_status_when_queue_empty() {
     assert_eq!(0, res_msg["message_count"]);
 }
 
-#[ignore]
 #[test]
 fn test_delivery_request() {
     initialize();

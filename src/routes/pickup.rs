@@ -2,24 +2,34 @@
 // SPDX-License-Identifier: Apache-2.0
 use crate::didcomm_types::{PickupMsgEnum, PickupStatusMsg, PickupStatusReqMsg, ProblemReportMsg};
 use crate::storage::MediatorPersistence;
-use axum::{extract::State, Json};
+use axum::{extract::State, Json, http::StatusCode};
 use log::info;
 use std::sync::Arc;
 
 pub async fn handle_pickup<T: MediatorPersistence>(
     State(storage): State<Arc<T>>,
     Json(pickup_message): Json<PickupMsgEnum>,
-) -> Json<PickupMsgEnum> {
+) -> (StatusCode, Json<PickupMsgEnum>) {
     match &pickup_message {
         PickupMsgEnum::PickupStatusReqMsg(status_request) => {
-            handle_pickup_status_req(status_request, storage).await
+            (
+                StatusCode::OK, 
+                handle_pickup_status_req(status_request, storage).await
+            )
         }
-        // PickupMsgEnum::PickupStatusMsg(status) => {
-        //     handle_pickup_status(status, storage).await
-        // }
+        // Why is client sending us status? That's server's job.
+        PickupMsgEnum::PickupStatusMsg(_status) => {
+            (   
+                StatusCode::BAD_REQUEST,
+                handle_pickup_type_not_implemented().await
+            )
+        }
         _ => {
             info!("Received {:#?}", &pickup_message);
-            handle_pickup_type_not_implemented().await
+            (   
+                StatusCode::NOT_IMPLEMENTED,
+                handle_pickup_type_not_implemented().await
+            )
         }
     }
 }
