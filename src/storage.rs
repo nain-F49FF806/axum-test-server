@@ -134,54 +134,40 @@ impl MediatorPersistence for sqlx::MySqlPool {
         Ok(())
     }
     async fn retrieve_pending_message_count(&self, auth_pubkey: &str, recipient_key: Option<&String>) -> Result<u32, String> {
-        if let Some(recipient_key) = recipient_key {
-            let account: Vec<u8> = self.get_account(auth_pubkey).await?;
-            // Fetch *one* recipient with recipient_key
-            let recipient: Vec<u8> = sqlx::query(
+        let account: Vec<u8> = self.get_account(auth_pubkey).await?;
+        let mut recipient_rows_stream = if let Some(recipient_key) = recipient_key {
+            sqlx::query(
                 "SELECT * FROM recipients WHERE (recipient_key = ?) AND (account = ?)"
             )
             .bind(recipient_key)
             .bind(account)
-            .fetch_one(self)
-            .await.unwrap()
-            .get("recipient");
-            info!("Getting count for Recipient {:x?}", recipient);
-            let message_count = sqlx::query(
-                "SELECT COUNT(*)
-                    FROM messages
-                    WHERE recipient = ?; -- AND received = 0;"
+            .fetch(self)
+        }
+        else {
+            sqlx::query(
+                "SELECT * FROM recipients WHERE (account =  ?)"
             )
-            .bind(recipient)
+            .bind(account)
+            .fetch(self)
+        };
+        let mut total_message_count: u32 = 0;
+        while let Some(recipient_row) = recipient_rows_stream.try_next().await.unwrap() {
+            let recipient: Vec<u8> = recipient_row.get("recipient");
+            let message_count = sqlx::query(
+                "SELECT COUNT(*) FROM messages 
+                WHERE (recipient = ?) 
+                -- AND (received = 0);"
+            )
+            .bind(&recipient)
             .fetch_one(self)
             .await
             .unwrap()
-            .get::<i32, &str>("COUNT(*)");
-            Ok(message_count.try_into().unwrap())
-        }
-        else {
-            let mut recipient_rows = sqlx::query(
-                "SELECT * FROM recipients WHERE recipient_key = ?"
-            )
-            .bind(recipient_key)
-            .fetch(self);
-            let mut total_message_count: i32 = 0;
-            while let Some(recipient_row) = recipient_rows.try_next().await.unwrap() {
-                let recipient: Vec<u8> = recipient_row.get("recipient");
-                info!("Getting count for Recipient {:x?}", recipient);
-                let message_count = sqlx::query(
-                    "SELECT COUNT(*)
-                        FROM messages;
-                        -- WHERE received = 0;"
-                )
-                .fetch_one(self)
-                .await
-                .unwrap()
-                .get::<i32, &str>("COUNT(*)");
-                total_message_count += message_count;
-            } 
-            info!("Total message count of all recipients {:#?}", &total_message_count);
-            Ok(total_message_count.try_into().unwrap())
-        }
+            .get::<i32, &str>("COUNT(*)"); // MySQL BIGINT can be converted to i32 only, not u32
+            info!("Got count for Recipient {:x?}: {:#?} ", &recipient, &message_count);
+            total_message_count += u32::try_from(message_count).unwrap();
+        } 
+        info!("Total message count of all recipients {:#?}", &total_message_count);
+        Ok(total_message_count)
     }
     // async fn retrieve_pending_messages(&self, limit: u32, recipient_key: Option<&String>) -> Vec<(u32, Vec<u8>)> {
     //     info!("recipient key request {:#?}", recipient_key);
