@@ -3,7 +3,6 @@
 
 pub mod database;
 
-use crate::didcomm_types::ForwardMsg;
 use async_trait::async_trait;
 use database::get_db_pool;
 use log::info;
@@ -32,7 +31,7 @@ pub trait MediatorPersistence: Send + Sync + 'static {
     async fn add_recipient(&self, auth_pubkey: &str, recipient_key: &str) ->  Result<(), String>;
     async fn remove_recipient(&self, auth_pubkey: &str, recipient_key: &str) ->  Result<(), String>;
     async fn list_recipient_keys(&self, auth_pubkey: &str) -> Result<Vec<String>, String>;
-    async fn persist_forward_message(&self, forward_msg: &ForwardMsg) -> Result<(), String>;
+    async fn persist_forward_message(&self, recipient_key: &str, message_data: &str) -> Result<(), String>;
     async fn retrieve_pending_message_count(&self, recipient_key: Option<&String>) -> u32;
     // async fn retrieve_pending_messages(
     //     &self,
@@ -102,12 +101,12 @@ impl MediatorPersistence for sqlx::MySqlPool {
     //     }
     
     // }
-    async fn persist_forward_message(&self, forward_msg: &ForwardMsg) -> Result<(), String> {
+    async fn persist_forward_message(&self, recipient_key: &str, message_data: &str) -> Result<(), String> {
         // Fetch recipients with given recipient_key
         let mut rows = sqlx::query(
             "SELECT * FROM recipients WHERE recipient_key = ?"
         )
-            .bind(&forward_msg.recipient_key)
+            .bind(recipient_key)
             .fetch(self);
         // Save message for each recipient
         while let Some(row) = rows.try_next().await.unwrap() {
@@ -116,7 +115,7 @@ impl MediatorPersistence for sqlx::MySqlPool {
             info!("Persisting message for recipient {:x?}", recipient);
             sqlx::query("INSERT INTO messages (recipient, message_data) VALUES (?, ?)")
             .bind(&recipient)
-            .bind(&forward_msg.message)
+            .bind(message_data)
             .execute(self)
             .await
             .unwrap();
