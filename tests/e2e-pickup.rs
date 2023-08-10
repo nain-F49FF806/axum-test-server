@@ -7,7 +7,8 @@ static INIT: Once = Once::new();
 const BASE_URL: &str = "http://localhost:7999";
 
 // Test variables
-const RECIPIENT_KEY: &str = "Anderson Smith n0r3t1";
+const AUTH_PUBKEY: &str = "Anderson Smith n0r3t1";
+const RECIPIENT_KEY: &str = "Anderson Smith n0r3t1r1";
 
 fn setup_account() {
     let client = reqwest::blocking::Client::new();
@@ -15,16 +16,39 @@ fn setup_account() {
     let new_account_req = json!(
         {
             "@type": "https://didcomm.org/coordinate-mediation/1.0/mediate-request",
-            "auth_pubkey": RECIPIENT_KEY
+            "auth_pubkey": AUTH_PUBKEY
         }
     );
     let res = client.post(endpoint).json(&new_account_req).send().unwrap();
+    res.error_for_status().unwrap();
+}
+fn setup_recipient() {
+    let client = reqwest::blocking::Client::new();
+    let endpoint = format!("{BASE_URL}/coord");
+    let add_recipient_req = json!(
+        {
+            "@type": "https://didcomm.org/coordinate-mediation/1.0/keylist-update",
+            "auth_pubkey": AUTH_PUBKEY,
+            "updates": [
+              {
+                "recipient_key": RECIPIENT_KEY,
+                "action": "add"
+              }
+            ]
+          }
+    );
+    let res = client
+        .post(endpoint)
+        .json(&add_recipient_req)
+        .send()
+        .unwrap();
     res.error_for_status().unwrap();
 }
 
 pub fn initialize() {
     INIT.call_once(|| {
         setup_account();
+        setup_recipient();
     });
 }
 
@@ -39,6 +63,7 @@ fn test_status_request_endpoint_exists() {
         {
             "@id": id,
             "@type": "https://didcomm.org/messagepickup/2.0/status-request",
+            "auth_pubkey": AUTH_PUBKEY,
             "recipient_key": recipient_key
         }
     );
@@ -56,6 +81,7 @@ fn test_status_request_returns_a_valid_status() {
         {
             "@id": 123,
             "@type": "https://didcomm.org/messagepickup/2.0/status-request",
+            "auth_pubkey": AUTH_PUBKEY,
         }
     );
     let res = client.post(endpoint).json(&status_request).send().unwrap();
@@ -77,6 +103,7 @@ fn test_status_request_for_key_returns_a_valid_status() {
         {
             "@id": 123,
             "@type": "https://didcomm.org/messagepickup/2.0/status-request",
+            "auth_pubkey": AUTH_PUBKEY,
             "recipient_key": RECIPIENT_KEY
         }
     );
@@ -112,6 +139,7 @@ fn test_delivery_request_returns_status_when_queue_empty() {
         {
             "@id": "123456781",
             "@type": "https://didcomm.org/messagepickup/2.0/delivery-request",
+            "auth_pubkey": AUTH_PUBKEY,
             "limit": 10,
             "recipient_key": "<key for messages>"
         }
@@ -140,6 +168,7 @@ fn test_delivery_request() {
         {
             "@id": 123,
             "@type": "https://didcomm.org/messagepickup/2.0/delivery-request",
+            "auth_pubkey": AUTH_PUBKEY,
             "limit": 10
         }
     );
