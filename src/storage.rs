@@ -47,30 +47,19 @@ pub trait MediatorPersistence: Send + Sync + 'static {
 impl MediatorPersistence for sqlx::MySqlPool {
     async fn create_account(&self, auth_pubkey: &str) -> Result<(), String> {
         info!("Adding new account to database with auth_pubkey {:#?}", &auth_pubkey);
-        let insert_res = sqlx::query("INSERT INTO accounts (auth_pubkey) VALUES (?);")
+        let insert_result = sqlx::query("INSERT INTO accounts (auth_pubkey) VALUES (?);")
             .bind(auth_pubkey)
             .execute(self)
             .await;
-        if let Err(err) = insert_res {
+        if let Err(err) = insert_result {
             info!("Error during creating new account, {:#?}", err);
             return Err(format!("{:#}", err))
         };
-        let account: Vec<u8> = sqlx::query("SELECT (account) FROM accounts WHERE auth_pubkey = ?;")
-            .bind(auth_pubkey)
-            .fetch_one(self)
-            .await
-            .unwrap()
-            .get("account");
-        info!("Created account {:#?}, Adding auth_pubkey {:#?} as a default recipient_key to account", &account, &auth_pubkey);
-        sqlx::query("INSERT INTO recipients (account, recipient_key) VALUES (?, ?);")
-        .bind(&account)
-        .bind(auth_pubkey)
-        .execute(self)
-        .await
-        .unwrap();
+        let account = self.get_account(auth_pubkey).await?;
+        info!("Created account {:x?} for auth_pubkey {:#?}", &account, &auth_pubkey);
         Ok(())
     }
-    /// Get account id associated with this auth_pubkey
+    /// Get account id associated with auth_pubkey
     async fn get_account(&self, auth_pubkey: &str) -> Result<Vec<u8>, String> {
         let account: Vec<u8> = match 
         sqlx::query("SELECT (account) FROM accounts WHERE auth_pubkey = ?;")
