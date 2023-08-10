@@ -32,7 +32,7 @@ pub trait MediatorPersistence: Send + Sync + 'static {
     async fn remove_recipient(&self, auth_pubkey: &str, recipient_key: &str) ->  Result<(), String>;
     async fn list_recipient_keys(&self, auth_pubkey: &str) -> Result<Vec<String>, String>;
     async fn persist_forward_message(&self, recipient_key: &str, message_data: &str) -> Result<(), String>;
-    async fn retrieve_pending_message_count(&self, recipient_key: Option<&String>) -> u32;
+    async fn retrieve_pending_message_count(&self, auth_pubkey: &str, recipient_key: Option<&String>) -> Result<u32, String>;
     // async fn retrieve_pending_messages(
     //     &self,
     //     limit: u32,
@@ -122,14 +122,26 @@ impl MediatorPersistence for sqlx::MySqlPool {
         }
         Ok(())
     }
-    async fn retrieve_pending_message_count(&self, recipient_key: Option<&String>) -> u32 {
+    async fn retrieve_pending_message_count(&self, auth_pubkey: &str, recipient_key: Option<&String>) -> Result<u32, String> {
         if let Some(recipient_key) = recipient_key {
+            let account: Vec<u8> = match 
+            sqlx::query("SELECT (account) FROM accounts WHERE auth_pubkey = ?;")
+            .bind(auth_pubkey)
+            .fetch_one(self)
+            .await
+            {
+                Ok(account_row) => {account_row.get("account") }
+                Err(err) => {
+                    info!("Error while finding account, {:#?}", err);
+                    return Err(format!("{:#}", err))
+                }
+            };
             // Fetch *one* recipient with recipient_key
-            // This should later be redone to use auth_pubkey registered recipient
             let recipient: Vec<u8> = sqlx::query(
-                "SELECT * FROM recipients WHERE recipient_key = ?"
+                "SELECT * FROM recipients WHERE (recipient_key = ?) AND (account = ?)"
             )
             .bind(recipient_key)
+            .bind(account)
             .fetch_one(self)
             .await.unwrap()
             .get("recipient");
@@ -144,7 +156,7 @@ impl MediatorPersistence for sqlx::MySqlPool {
             .await
             .unwrap()
             .get::<i32, &str>("COUNT(*)");
-            message_count.try_into().unwrap()
+            Ok(message_count.try_into().unwrap())
         }
         else {
             let mut recipient_rows = sqlx::query(
@@ -168,7 +180,7 @@ impl MediatorPersistence for sqlx::MySqlPool {
                 total_message_count += message_count;
             } 
             info!("Total message count of all recipients {:#?}", &total_message_count);
-            total_message_count.try_into().unwrap()
+            Ok(total_message_count.try_into().unwrap())
         }
     }
     // async fn retrieve_pending_messages(&self, limit: u32, recipient_key: Option<&String>) -> Vec<(u32, Vec<u8>)> {

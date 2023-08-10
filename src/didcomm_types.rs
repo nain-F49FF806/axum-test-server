@@ -78,19 +78,20 @@ impl PickupStatusMsg {
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PickupStatusReqMsg {
+    pub auth_pubkey: String,
     pub recipient_key: Option<String>,
 }
 
-impl PickupStatusReqMsg {
-    pub fn new(recipient_key: Option<String>) -> PickupStatusReqMsg {
-        PickupStatusReqMsg { recipient_key }
-    }
-    // pub fn custom_type(self, _type: String) -> PickupStatusReqMsg {
-    //     PickupStatusReqMsg {
-    //          recipient_key: self.recipient_key,
-    //     }
-    // }
-}
+// impl PickupStatusReqMsg {
+//     pub fn new(recipient_key: Option<String>) -> PickupStatusReqMsg {
+//         PickupStatusReqMsg { recipient_key }
+//     }
+//     // pub fn custom_type(self, _type: String) -> PickupStatusReqMsg {
+//     //     PickupStatusReqMsg {
+//     //          recipient_key: self.recipient_key,
+//     //     }
+//     // }
+// }
 
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Debug)]
