@@ -114,6 +114,7 @@ impl MediatorPersistence for sqlx::MySqlPool {
     // }
     async fn persist_forward_message(&self, recipient_key: &str, message_data: &str) -> Result<(), String> {
         // Fetch recipients with given recipient_key
+        info!("Fetching recipients with recipient_key {:#?}", recipient_key);
         let mut rows = sqlx::query(
             "SELECT * FROM recipients WHERE recipient_key = ?"
         )
@@ -122,10 +123,11 @@ impl MediatorPersistence for sqlx::MySqlPool {
         // Save message for each recipient
         while let Some(row) = rows.try_next().await.unwrap() {
             // map the row into a user-defined domain type
-            let recipient: Vec<u8> = row.get("recipient");  // binary decode
-            info!("Persisting message for recipient {:x?}", recipient);
-            sqlx::query("INSERT INTO messages (recipient, message_data) VALUES (?, ?)")
-            .bind(&recipient)
+            let account: Vec<u8> = row.get("account");
+            info!("Persisting message for account {:x?}", account);
+            sqlx::query("INSERT INTO messages (account, recipient_key, message_data) VALUES (?, ?, ?)")
+            .bind(&account)
+            .bind(recipient_key)
             .bind(message_data)
             .execute(self)
             .await
@@ -137,7 +139,7 @@ impl MediatorPersistence for sqlx::MySqlPool {
         let account: Vec<u8> = self.get_account(auth_pubkey).await?;
         let mut recipient_rows_stream = if let Some(recipient_key) = recipient_key {
             sqlx::query(
-                "SELECT * FROM recipients WHERE (recipient_key = ?) AND (account = ?)"
+                "SELECT * FROM recipients WHERE (account = ?) and (recipient_key = ?)"
             )
             .bind(recipient_key)
             .bind(account)
@@ -152,18 +154,20 @@ impl MediatorPersistence for sqlx::MySqlPool {
         };
         let mut total_message_count: u32 = 0;
         while let Some(recipient_row) = recipient_rows_stream.try_next().await.unwrap() {
-            let recipient: Vec<u8> = recipient_row.get("recipient");
+            let account: Vec<u8> = recipient_row.get("account");
+            let recipient_key: String = recipient_row.get("recipient_key");
             let message_count = sqlx::query(
                 "SELECT COUNT(*) FROM messages 
-                WHERE (recipient = ?) 
+                WHERE (account = ?) AND (recipient_key = ?)
                 -- AND (received = 0);"
             )
-            .bind(&recipient)
+            .bind(&account)
+            .bind(&recipient_key)
             .fetch_one(self)
             .await
             .unwrap()
             .get::<i32, &str>("COUNT(*)"); // MySQL BIGINT can be converted to i32 only, not u32
-            info!("Got count for Recipient {:x?}: {:#?} ", &recipient, &message_count);
+            info!("Got count for recipient_key {:x?}: {:#?} ", &recipient_key, &message_count);
             total_message_count += u32::try_from(message_count).unwrap();
         } 
         info!("Total message count of all recipients {:#?}", &total_message_count);
