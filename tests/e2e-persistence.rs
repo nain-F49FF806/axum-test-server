@@ -8,7 +8,8 @@ static INIT: Once = Once::new();
 const BASE_URL: &str = "http://localhost:7999";
 
 // Test variables
-const RECIPIENT_KEY: &str = "Anderson Smith n0r3t1";
+const AUTH_PUBKEY: &str = "Anderson Smith n0r3t1";
+const RECIPIENT_KEY: &str = "Anderson Smith n0r3t1r1";
 
 fn setup_account() {
     let client = reqwest::blocking::Client::new();
@@ -16,16 +17,38 @@ fn setup_account() {
     let new_account_req = json!(
         {
             "@type": "https://didcomm.org/coordinate-mediation/1.0/mediate-request",
-            "auth_pubkey": RECIPIENT_KEY
+            "auth_pubkey": AUTH_PUBKEY
         }
     );
     let res = client.post(endpoint).json(&new_account_req).send().unwrap();
     res.error_for_status().unwrap();
 }
-
+fn setup_recipient() {
+    let client = reqwest::blocking::Client::new();
+    let endpoint = format!("{BASE_URL}/coord");
+    let add_recipient_req = json!(
+        {
+            "@type": "https://didcomm.org/coordinate-mediation/1.0/keylist-update",
+            "auth_pubkey": AUTH_PUBKEY,
+            "updates": [
+              {
+                "recipient_key": RECIPIENT_KEY,
+                "action": "add"
+              }
+            ]
+          }
+    );
+    let res = client
+        .post(endpoint)
+        .json(&add_recipient_req)
+        .send()
+        .unwrap();
+    res.error_for_status().unwrap();
+}
 pub fn initialize() {
     INIT.call_once(|| {
         setup_account();
+        setup_recipient();
     });
 }
 
