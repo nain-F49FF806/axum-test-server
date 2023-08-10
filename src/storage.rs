@@ -130,8 +130,8 @@ impl MediatorPersistence for sqlx::MySqlPool {
             sqlx::query(
                 "SELECT * FROM recipients WHERE (account = ?) and (recipient_key = ?)"
             )
-            .bind(recipient_key)
             .bind(account)
+            .bind(recipient_key)
             .fetch(self)
         }
         else {
@@ -159,7 +159,7 @@ impl MediatorPersistence for sqlx::MySqlPool {
             info!("Got count for recipient_key {:x?}: {:#?} ", &recipient_key, &message_count);
             total_message_count += u32::try_from(message_count).unwrap();
         } 
-        info!("Total message count of all recipients {:#?}", &total_message_count);
+        info!("Total message count of all requested recipients {:#?}", &total_message_count);
         Ok(total_message_count)
     }
     // async fn retrieve_pending_messages(&self, limit: u32, recipient_key: Option<&String>) -> Vec<(u32, Vec<u8>)> {
