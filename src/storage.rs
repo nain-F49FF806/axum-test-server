@@ -27,6 +27,7 @@ pub async fn init() -> sqlx::MySqlPool {
 #[async_trait]
 pub trait MediatorPersistence: Send + Sync + 'static {
     async fn create_account(&self, auth_pubkey: &str) -> Result<(), String>;
+    async fn get_account(&self, auth_pubkey: &str) -> Result<Vec<u8>, String>;
     // async fn vaporize_account(&self, auth_pubkey: String);
     async fn add_recipient(&self, auth_pubkey: &str, recipient_key: &str) ->  Result<(), String>;
     async fn remove_recipient(&self, auth_pubkey: &str, recipient_key: &str) ->  Result<(), String>;
@@ -69,14 +70,24 @@ impl MediatorPersistence for sqlx::MySqlPool {
         .unwrap();
         Ok(())
     }
+    /// Get account id associated with this auth_pubkey
+    async fn get_account(&self, auth_pubkey: &str) -> Result<Vec<u8>, String> {
+        let account: Vec<u8> = match 
+        sqlx::query("SELECT (account) FROM accounts WHERE auth_pubkey = ?;")
+        .bind(auth_pubkey)
+        .fetch_one(self)
+        .await
+        {
+            Ok(account_row) => {account_row.get("account") }
+            Err(err) => {
+                info!("Error while finding account, {:#?}", err);
+                return Err(format!("{:#}", err))
+            }
+        };
+        Ok(account)
+    }
     // async fn vaporize_account(&self, auth_pubkey: String) {
-    //     let account: Vec<u8> = sqlx::query("SELECT (account) FROM accounts WHERE auth_pubkey = ?;")
-    //     .bind(&auth_pubkey)
-    //     .fetch_one(self)
-    //     .await
-    //     .unwrap()
-    //     .get("account");
-
+    //     let account: Vec<u8> = self.get_account(auth_pubkey).await?;
     //     let mut recipient_rows = sqlx::query(
     //         "SELECT * FROM recipients WHERE account = ?;"
     //     )
@@ -124,18 +135,7 @@ impl MediatorPersistence for sqlx::MySqlPool {
     }
     async fn retrieve_pending_message_count(&self, auth_pubkey: &str, recipient_key: Option<&String>) -> Result<u32, String> {
         if let Some(recipient_key) = recipient_key {
-            let account: Vec<u8> = match 
-            sqlx::query("SELECT (account) FROM accounts WHERE auth_pubkey = ?;")
-            .bind(auth_pubkey)
-            .fetch_one(self)
-            .await
-            {
-                Ok(account_row) => {account_row.get("account") }
-                Err(err) => {
-                    info!("Error while finding account, {:#?}", err);
-                    return Err(format!("{:#}", err))
-                }
-            };
+            let account: Vec<u8> = self.get_account(auth_pubkey).await?;
             // Fetch *one* recipient with recipient_key
             let recipient: Vec<u8> = sqlx::query(
                 "SELECT * FROM recipients WHERE (recipient_key = ?) AND (account = ?)"
@@ -221,18 +221,7 @@ impl MediatorPersistence for sqlx::MySqlPool {
     // }
     async fn add_recipient(&self, auth_pubkey: &str, recipient_key: &str) ->  Result<(), String> {
         info!("Adding recipient_key to account with auth_pubkey {:#?}", auth_pubkey);
-        let account: Vec<u8> = match 
-            sqlx::query("SELECT (account) FROM accounts WHERE auth_pubkey = ?;")
-            .bind(auth_pubkey)
-            .fetch_one(self)
-            .await
-        {
-            Ok(account_row) => {account_row.get("account") }
-            Err(err) => {
-                info!("Error while finding account, {:#?}", err);
-                return Err(format!("{:#}", err))
-            }
-        };
+        let account: Vec<u8> = self.get_account(auth_pubkey).await?;
         info!(
             "Found matching account {:x?}. Proceeding with attempt to add recipient recipient_key {:#?} ",
             account,
@@ -253,18 +242,7 @@ impl MediatorPersistence for sqlx::MySqlPool {
     }
     async fn remove_recipient(&self, auth_pubkey: &str, recipient_key: &str) ->  Result<(), String> {
         info!("Removing recipient_key from account with auth_pubkey {:#?}", auth_pubkey);
-        let account: Vec<u8> = match 
-            sqlx::query("SELECT (account) FROM accounts WHERE auth_pubkey = ?;")
-            .bind(auth_pubkey)
-            .fetch_one(self)
-            .await
-        {
-            Ok(account_row) => {account_row.get("account") }
-            Err(err) => {
-                info!("Error while finding account, {:#?}", err);
-                return Err(format!("{:#}", err))
-            }
-        };
+        let account: Vec<u8> = self.get_account(auth_pubkey).await?;
         info!(
             "Found matching account {:x?}. Proceeding with attempt to remove recipient recipient_key {:#?} ",
             account,
@@ -285,18 +263,7 @@ impl MediatorPersistence for sqlx::MySqlPool {
     }
     async fn list_recipient_keys(&self, auth_pubkey: &str) -> Result<Vec<String>, String> {
         info!("Retrieving recipient_keys for account with auth_pubkey {:#?}", auth_pubkey);
-        let account: Vec<u8> = match 
-            sqlx::query("SELECT (account) FROM accounts WHERE auth_pubkey = ?;")
-            .bind(auth_pubkey)
-            .fetch_one(self)
-            .await
-        {
-            Ok(account_row) => {account_row.get("account") }
-            Err(err) => {
-                info!("Error while finding account, {:#?}", err);
-                return Err(format!("{:#}", err))
-            }
-        };
+        let account: Vec<u8> = self.get_account(auth_pubkey).await?;
         let recipient_keys: Vec<String> = match
             sqlx::query("SELECT (recipient_key) FROM recipients WHERE account = ?;")
             .bind(&account)
