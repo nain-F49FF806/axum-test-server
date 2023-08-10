@@ -69,7 +69,7 @@ async fn handle_pickup_delivery_req<T: MediatorPersistence>(delivery_request: &P
     let attach: Vec<PickupDeliveryMsgAttach> = messages.into_iter()
         .map(|(message_id, message_content)| {
             PickupDeliveryMsgAttach{
-                id: message_id.to_string(), 
+                id: message_id, 
                 data: PickupDeliveryMsgAttachData{base64: message_content}
             }
         })

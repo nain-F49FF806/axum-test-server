@@ -27,11 +27,12 @@ CREATE TABLE IF NOT EXISTS messages (
     seq_num SERIAL,
     account BINARY(16) NOT NULL,
     recipient_key VARCHAR(64) NOT NULL,
-    message_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID(),true)) NOT NULL UNIQUE,
+    message_idb BINARY(16) DEFAULT (UUID_TO_BIN(UUID(),true)) NOT NULL UNIQUE,
+    -- Readable message id (for identifying message over wire)
+    message_id CHAR(36) GENERATED ALWAYS AS (BIN_TO_UUID(message_idb)) VIRTUAL,
     -- 16MiB limit (medium blob)
     message_data MEDIUMBLOB NOT NULL,
-    PRIMARY KEY (account, recipient_key, message_id),
+    PRIMARY KEY (account, recipient_key, message_idb),
     FOREIGN KEY (account, recipient_key) REFERENCES recipients(account, recipient_key)
 );
-
 
