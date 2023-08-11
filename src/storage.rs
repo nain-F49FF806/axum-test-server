@@ -105,23 +105,28 @@ impl MediatorPersistence for sqlx::MySqlPool {
     async fn persist_forward_message(&self, recipient_key: &str, message_data: &str) -> Result<(), String> {
         // Fetch recipients with given recipient_key
         info!("Fetching recipients with recipient_key {:#?}", recipient_key);
-        let mut rows = sqlx::query(
+        let recipient_row = sqlx::query(
             "SELECT * FROM recipients WHERE recipient_key = ?"
         )
             .bind(recipient_key)
-            .fetch(self);
-        // Save message for each recipient
-        while let Some(row) = rows.try_next().await.unwrap() {
-            // map the row into a user-defined domain type
-            let account_id: Vec<u8> = row.get("account_id");
-            info!("Persisting message for account {:x?}", account_id);
-            sqlx::query("INSERT INTO messages (account_id, recipient_key, message_data) VALUES (?, ?, ?)")
+            .fetch_one(self)
+            .await;
+        if let Err(err) = recipient_row {
+            info!("Error while finding target recipient, {:#}", err);
+            return Err(format!("{:#}", err))
+        }
+        let account_id: Vec<u8> = recipient_row.unwrap().get("account_id");
+        // Save message for recipient
+        info!("Persisting message for account {:x?}", account_id);
+        let insert_result = sqlx::query("INSERT INTO messages (account_id, recipient_key, message_data) VALUES (?, ?, ?)")
             .bind(&account_id)
             .bind(recipient_key)
             .bind(message_data)
             .execute(self)
-            .await
-            .unwrap();
+            .await;
+        if let Err(err) = insert_result {
+            info!("Error while saving message for recipient {:x?}, {:#}", recipient_key, err);
+            return Err(format!("{:#}", err))
         }
         Ok(())
     }
