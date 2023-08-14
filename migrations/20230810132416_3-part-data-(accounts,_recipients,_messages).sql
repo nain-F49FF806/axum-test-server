@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS accounts (
     -- for display purpose
     account_name CHAR(36) GENERATED ALWAYS AS (BIN_TO_UUID(account_id)) VIRTUAL,
     -- mediator facing pubkey
+    -- UNIQUE constraint automatically creates index for fast unique checking; is reused for scanning
     auth_pubkey VARCHAR(64) NOT NULL UNIQUE,
     PRIMARY KEY(account_id)
 );
