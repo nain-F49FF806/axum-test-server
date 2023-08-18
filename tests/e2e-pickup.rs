@@ -2,13 +2,59 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use serde_json::json;
+use std::sync::Once;
+static INIT: Once = Once::new();
 const BASE_URL: &str = "http://localhost:7999";
 
 // Test variables
-const RECIPIENT_KEY: &str = "Alice";
+const AUTH_PUBKEY: &str = "Anderson Smith n0r3t1";
+const RECIPIENT_KEY: &str = "Anderson Smith n0r3t1r1";
+
+fn setup_account() {
+    let client = reqwest::blocking::Client::new();
+    let endpoint = format!("{BASE_URL}/coord");
+    let new_account_req = json!(
+        {
+            "@type": "https://didcomm.org/coordinate-mediation/1.0/mediate-request",
+            "auth_pubkey": AUTH_PUBKEY
+        }
+    );
+    let res = client.post(endpoint).json(&new_account_req).send().unwrap();
+    res.error_for_status().unwrap();
+}
+fn setup_recipient() {
+    let client = reqwest::blocking::Client::new();
+    let endpoint = format!("{BASE_URL}/coord");
+    let add_recipient_req = json!(
+        {
+            "@type": "https://didcomm.org/coordinate-mediation/1.0/keylist-update",
+            "auth_pubkey": AUTH_PUBKEY,
+            "updates": [
+              {
+                "recipient_key": RECIPIENT_KEY,
+                "action": "add"
+              }
+            ]
+          }
+    );
+    let res = client
+        .post(endpoint)
+        .json(&add_recipient_req)
+        .send()
+        .unwrap();
+    res.error_for_status().unwrap();
+}
+
+pub fn initialize() {
+    INIT.call_once(|| {
+        setup_account();
+        setup_recipient();
+    });
+}
 
 #[test]
 fn test_status_request_endpoint_exists() {
+    initialize();
     let client = reqwest::blocking::Client::new();
     let endpoint = format!("{BASE_URL}/pickup");
 
@@ -17,6 +63,7 @@ fn test_status_request_endpoint_exists() {
         {
             "@id": id,
             "@type": "https://didcomm.org/messagepickup/2.0/status-request",
+            "auth_pubkey": AUTH_PUBKEY,
             "recipient_key": recipient_key
         }
     );
@@ -26,6 +73,7 @@ fn test_status_request_endpoint_exists() {
 
 #[test]
 fn test_status_request_returns_a_valid_status() {
+    initialize();
     let client = reqwest::blocking::Client::new();
     let endpoint = format!("{BASE_URL}/pickup");
 
@@ -33,6 +81,7 @@ fn test_status_request_returns_a_valid_status() {
         {
             "@id": 123,
             "@type": "https://didcomm.org/messagepickup/2.0/status-request",
+            "auth_pubkey": AUTH_PUBKEY,
         }
     );
     let res = client.post(endpoint).json(&status_request).send().unwrap();
@@ -46,6 +95,7 @@ fn test_status_request_returns_a_valid_status() {
 
 #[test]
 fn test_status_request_for_key_returns_a_valid_status() {
+    initialize();
     let client = reqwest::blocking::Client::new();
     let endpoint = format!("{BASE_URL}/pickup");
 
@@ -53,6 +103,7 @@ fn test_status_request_for_key_returns_a_valid_status() {
         {
             "@id": 123,
             "@type": "https://didcomm.org/messagepickup/2.0/status-request",
+            "auth_pubkey": AUTH_PUBKEY,
             "recipient_key": RECIPIENT_KEY
         }
     );
@@ -78,7 +129,64 @@ fn test_status_request_for_key_returns_a_valid_status() {
 //     "live_delivery": false
 // }
 
+#[ignore]
+#[test]
+fn test_delivery_request_returns_status_when_queue_empty() {
+    initialize();
+    let client = reqwest::blocking::Client::new();
+    let endpoint = format!("{BASE_URL}/pickup");
+    let delivery_req = json!(
+        {
+            "@id": "123456781",
+            "@type": "https://didcomm.org/messagepickup/2.0/delivery-request",
+            "auth_pubkey": AUTH_PUBKEY,
+            "limit": 10,
+            "recipient_key": "<key for messages>"
+        }
+    );
 
+    let res = client.post(endpoint).json(&delivery_req).send().unwrap();
+    if let Err(err) = res.error_for_status_ref() {
+        panic!("Error response status {:#?}", err);
+    }
+    let res_msg = res.json::<serde_json::Value>().unwrap();
+    assert_eq!(
+        "https://didcomm.org/messagepickup/2.0/status",
+        res_msg["@type"]
+    );
+    assert_eq!(0, res_msg["message_count"]);
+}
+
+#[ignore]
+#[test]
+fn test_delivery_request() {
+    initialize();
+    let client = reqwest::blocking::Client::new();
+    let endpoint = format!("{BASE_URL}/pickup");
+
+    let delivery_request = json!(
+        {
+            "@id": 123,
+            "@type": "https://didcomm.org/messagepickup/2.0/delivery-request",
+            "auth_pubkey": AUTH_PUBKEY,
+            "limit": 10
+        }
+    );
+    let res = client
+        .post(endpoint)
+        .json(&delivery_request)
+        .send()
+        .unwrap();
+    if let Err(err) = res.error_for_status_ref() {
+        panic!("Error response status {:#?}", err);
+    }
+    let res_msg = res.json::<serde_json::Value>().unwrap();
+    assert_eq!(
+        "https://didcomm.org/messagepickup/2.0/delivery",
+        res_msg["@type"]
+    );
+    // assert_ne!(0, res_msg["message_count"]);
+}
 // {
 //     "@id": "123456781",
 //     "@type": "https://didcomm.org/messagepickup/2.0/delivery-request",
