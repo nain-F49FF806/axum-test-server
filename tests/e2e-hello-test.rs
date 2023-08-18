@@ -17,9 +17,7 @@ fn test_base_path_returns_hey() -> Result<(), Error> {
             assert_eq!("hey", res_text, "Unexpected response text");
             Ok(())
         }
-        Err(err) => {
-            Err(err)
-        }
+        Err(err) => Err(err),
     }
 }
 
