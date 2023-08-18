@@ -6,21 +6,6 @@ pub mod database;
 use async_trait::async_trait;
 use database::get_db_pool;
 
-
-#[cfg(any(
-    not(any(feature = "any_db", feature = "postgres_db", feature = "mysql_db")),
-    all(feature = "any_db", feature = "postgres_db", feature = "mysql_db"),
-    all(feature = "any_db", feature = "postgres_db"),
-    all(feature = "postgres_db", feature = "mysql_db"),
-    all(feature = "any_db", feature = "mysql_db")
-))]
-compile_error!("Pick any one of \"any_db\", \"postgresql_db\", \"mysql_db\" feature flags.");
-
-#[cfg(feature = "mysql_db")]
-pub async fn init() -> sqlx::MySqlPool {
-    get_db_pool().await
-}
-
 #[async_trait]
 pub trait MediatorPersistence: Send + Sync + 'static {
     async fn create_account(&self, auth_pubkey: &str) -> Result<(), String>;
