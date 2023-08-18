@@ -6,14 +6,14 @@ use crate::routes::hello_world;
 use crate::routes::json;
 use crate::routes::json::respond_message_json;
 use crate::routes::pickup::handle_pickup;
-use crate::storage::MediatorPersistence;
+use crate::storage;
 use axum::{routing::get, routing::post, Router};
 use std::sync::Arc;
 
-pub fn create_router<T>(storage: T) -> Router
-where
-    T: MediatorPersistence,
-{
+pub async fn create_router() -> Router {
+    // Initialize and get a storage struct that implements MediatorPersistence trait
+    // (this handles connection to storage backend)
+    let storage = storage::get_persistence().await;
     Router::new()
         .route(
             "/",
@@ -23,8 +23,8 @@ where
             "/json",
             get(json::echo_message_json).post(respond_message_json),
         )
-        .route("/forward", post(handle_forward::<T>))
-        .route("/pickup", post(handle_pickup::<T>))
-        .route("/coord", post(handle_coord::<T>))
+        .route("/forward", post(handle_forward))
+        .route("/pickup", post(handle_pickup))
+        .route("/coord", post(handle_coord))
         .with_state(Arc::new(storage))
 }

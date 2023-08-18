@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 pub mod database;
+/// Database backend is used for default implementation of MediatorPersistence trait
+pub use database::get_db_pool as get_persistence;
 
 use async_trait::async_trait;
-use database::get_db_pool;
 
 #[async_trait]
 pub trait MediatorPersistence: Send + Sync + 'static {
