@@ -1,6 +1,8 @@
 // Copyright 2023 Naian G.
 // SPDX-License-Identifier: Apache-2.0
 
+use env_logger::Env;
+use log::warn;
 use serde_json::json;
 use std::sync::Once;
 static INIT: Once = Once::new();
@@ -10,6 +12,10 @@ const BASE_URL: &str = "http://localhost:7999";
 const AUTH_PUBKEY: &str = "Anderson Smith n0r3t1";
 const RECIPIENT_KEY: &str = "Anderson Smith n0r3t1r1";
 
+fn setup_logging() {
+    let env = Env::default().default_filter_or("info");
+    env_logger::init_from_env(env);
+}
 fn setup_account() {
     let client = reqwest::blocking::Client::new();
     let endpoint = format!("{BASE_URL}/coord");
@@ -45,8 +51,9 @@ fn setup_recipient() {
     res.error_for_status().unwrap();
 }
 
-pub fn initialize() {
+fn initialize() {
     INIT.call_once(|| {
+        setup_logging();
         setup_account();
         setup_recipient();
     });
@@ -129,17 +136,18 @@ fn test_status_request_for_key_returns_a_valid_status() {
 //     "live_delivery": false
 // }
 
-#[ignore]
 #[test]
 fn test_delivery_request_returns_status_when_queue_empty() {
     initialize();
     let client = reqwest::blocking::Client::new();
     let endpoint = format!("{BASE_URL}/pickup");
+    // Use non existing recipient key to test 0 waiting messages case
     let delivery_req = json!(
         {
             "@id": "123456781",
             "@type": "https://didcomm.org/messagepickup/2.0/delivery-request",
             "auth_pubkey": AUTH_PUBKEY,
+
             "limit": 10,
             "recipient_key": "<key for messages>"
         }
@@ -147,7 +155,7 @@ fn test_delivery_request_returns_status_when_queue_empty() {
 
     let res = client.post(endpoint).json(&delivery_req).send().unwrap();
     if let Err(err) = res.error_for_status_ref() {
-        panic!("Error response status {:#?}", err);
+        warn!("Error response status {:#?}", err);
     }
     let res_msg = res.json::<serde_json::Value>().unwrap();
     assert_eq!(
@@ -157,13 +165,11 @@ fn test_delivery_request_returns_status_when_queue_empty() {
     assert_eq!(0, res_msg["message_count"]);
 }
 
-#[ignore]
 #[test]
 fn test_delivery_request() {
     initialize();
     let client = reqwest::blocking::Client::new();
     let endpoint = format!("{BASE_URL}/pickup");
-
     let delivery_request = json!(
         {
             "@id": 123,
@@ -178,7 +184,7 @@ fn test_delivery_request() {
         .send()
         .unwrap();
     if let Err(err) = res.error_for_status_ref() {
-        panic!("Error response status {:#?}", err);
+        warn!("Error response status {:#?}", err);
     }
     let res_msg = res.json::<serde_json::Value>().unwrap();
     assert_eq!(

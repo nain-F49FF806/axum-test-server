@@ -1,25 +1,39 @@
 // Copyright 2023 Naian G.
 // SPDX-License-Identifier: Apache-2.0
-use crate::didcomm_types::{PickupMsgEnum, PickupStatusMsg, PickupStatusReqMsg, ProblemReportMsg};
+use crate::didcomm_types::{PickupMsgEnum, PickupStatusMsg, PickupStatusReqMsg, ProblemReportMsg, PickupDeliveryReqMsg};
+use crate::didcomm_types::pickup_delivery_message_structs::*;
 use crate::storage::MediatorPersistence;
-use axum::{extract::State, Json};
+use axum::{extract::State, Json, http::StatusCode};
 use log::info;
 use std::sync::Arc;
 
 pub async fn handle_pickup<T: MediatorPersistence>(
     State(storage): State<Arc<T>>,
     Json(pickup_message): Json<PickupMsgEnum>,
-) -> Json<PickupMsgEnum> {
+) -> (StatusCode, Json<PickupMsgEnum>) {
     match &pickup_message {
         PickupMsgEnum::PickupStatusReqMsg(status_request) => {
-            handle_pickup_status_req(status_request, storage).await
+            (
+                StatusCode::OK, 
+                handle_pickup_status_req(status_request, storage).await
+            )
         }
-        // PickupMsgEnum::PickupStatusMsg(status) => {
-        //     handle_pickup_status(status, storage).await
-        // }
+        // Why is client sending us status? That's server's job.
+        PickupMsgEnum::PickupStatusMsg(_status) => {
+            (   
+                StatusCode::BAD_REQUEST,
+                handle_pickup_type_not_implemented().await
+            )
+        }
+        PickupMsgEnum::PickupDeliveryReq(delivery_request) => {
+            handle_pickup_delivery_req(delivery_request, storage).await
+        }
         _ => {
             info!("Received {:#?}", &pickup_message);
-            handle_pickup_type_not_implemented().await
+            (   
+                StatusCode::NOT_IMPLEMENTED,
+                handle_pickup_type_not_implemented().await
+            )
         }
     }
 }
@@ -41,6 +55,48 @@ async fn handle_pickup_status_req<T: MediatorPersistence>(
     Json(PickupMsgEnum::PickupStatusMsg(status))
 }
 
+async fn handle_pickup_delivery_req<T: MediatorPersistence>(delivery_request: &PickupDeliveryReqMsg, storage: Arc<T>) -> (StatusCode, Json<PickupMsgEnum>) {
+    info!("Received {:#?}", &delivery_request);
+    let auth_pubkey = &delivery_request.auth_pubkey;
+    let messages = storage.retrieve_pending_messages(
+        auth_pubkey,
+        delivery_request.limit,
+        delivery_request.recipient_key.as_ref()
+    ).await.unwrap();
+    // for (message_id, message_content) in messages.into_iter() {
+    //     info!("Message {:#?} {:#?}", message_id, String::from_utf8(message_content).unwrap())
+    // }
+    let attach: Vec<PickupDeliveryMsgAttach> = messages.into_iter()
+        .map(|(message_id, message_content)| {
+            PickupDeliveryMsgAttach{
+                id: message_id, 
+                data: PickupDeliveryMsgAttachData{base64: message_content}
+            }
+        })
+        .collect();
+    if !attach.is_empty() { 
+        (
+            StatusCode::OK, 
+            Json(PickupMsgEnum::PickupDelivery(
+                PickupDeliveryMsg {
+                    recipient_key: delivery_request.recipient_key.to_owned(),
+                    attach
+                }
+            ))
+        )
+    } else {
+        // send status message instead
+        (
+            StatusCode::OK, 
+            Json(PickupMsgEnum::PickupStatusMsg(
+                PickupStatusMsg {
+                    message_count: 0,
+                    recipient_key: delivery_request.recipient_key.to_owned(),
+                }
+            ))
+        )
+    }
+}
 // Returns global status message for user (not restricted to recipient key)
 // async fn handle_pickup_default<T: MediatorPersistence>(
 //     storage: Arc<T>,

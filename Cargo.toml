@@ -21,7 +21,7 @@ env_logger = "0.10.0"
 futures = "0.3.28"
 log = "0.4.19"
 serde = { version = "1.0.164", features = ["derive"] }
-serde_with = "3.1.0"
+serde_with = { version = "3.1.0", features = ["base64"] }
 sqlx = { version = "0.7.1", features = ["runtime-tokio"], optional = true }
 tokio = { version = "1.28.2", features = ["rt-multi-thread", "macros"] }
 
