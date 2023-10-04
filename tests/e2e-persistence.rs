@@ -10,6 +10,7 @@ const BASE_URL: &str = "http://localhost:7999";
 // Test variables
 const AUTH_PUBKEY: &str = "Anderson Smith n0r3t1";
 const RECIPIENT_KEY: &str = "Anderson Smith n0r3t1r1";
+const DID_DOC: &str = "{}";
 
 fn setup_account() {
     let client = reqwest::blocking::Client::new();
@@ -17,7 +18,8 @@ fn setup_account() {
     let new_account_req = json!(
         {
             "@type": "https://didcomm.org/coordinate-mediation/1.0/mediate-request",
-            "auth_pubkey": AUTH_PUBKEY
+            "auth_pubkey": AUTH_PUBKEY,
+            "did_doc": DID_DOC
         }
     );
     let res = client.post(endpoint).json(&new_account_req).send().unwrap();

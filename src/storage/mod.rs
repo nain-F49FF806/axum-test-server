@@ -9,7 +9,7 @@ use async_trait::async_trait;
 
 #[async_trait]
 pub trait MediatorPersistence: Send + Sync + 'static {
-    async fn create_account(&self, auth_pubkey: &str) -> Result<(), String>;
+    async fn create_account(&self, auth_pubkey: &str, our_signing_key: &str, did_doc: &str) -> Result<(), String>;
     async fn get_account_id(&self, auth_pubkey: &str) -> Result<Vec<u8>, String>;
     // async fn vaporize_account(&self, auth_pubkey: String);
     async fn add_recipient(&self, auth_pubkey: &str, recipient_key: &str) ->  Result<(), String>;
