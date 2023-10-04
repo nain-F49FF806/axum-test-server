@@ -5,7 +5,6 @@ use log::info;
 
 use sqlx::{mysql::MySqlPoolOptions, MySqlPool};
 use sqlx::Row;
-use serde_json;
 use futures::TryStreamExt;
 
 use async_trait::async_trait;
@@ -60,23 +59,27 @@ impl MediatorPersistence for sqlx::MySqlPool {
     }
     #[cfg(feature = "mediator_persistence_extras")]
     async fn list_accounts(&self) -> Result<Vec<(String, String)>, String> {
-        let list: Vec<(String, String)> = sqlx::query!("SELECT account_name, auth_pubkey FROM accounts;")
+        let list: Vec<(String, String)> = sqlx::query("SELECT account_name, auth_pubkey FROM accounts;")
             .fetch_all(self).await.map_err(|e| e.to_string())?
             .iter().map(
-                |record| (
-                    record.account_name.clone(), 
-                    record.auth_pubkey.clone()
+                |row| (
+                    row.get("account_name"), 
+                    row.get("auth_pubkey")
                 )
             ).collect();
         Ok(list)
     }
     #[cfg(feature = "mediator_persistence_extras")]
     async fn get_account_details(&self, auth_pubkey: &str) -> Result<(u64, String, String, String), String> {
-        let result = sqlx::query!("SELECT * FROM accounts WHERE auth_pubkey = ?;", auth_pubkey)
+        let row = sqlx::query("SELECT * FROM accounts WHERE auth_pubkey = ?;")
+            .bind(auth_pubkey)
             .fetch_one(self).await.map_err(|e| e.to_string())?;
-        Ok(
-            (result.seq_num, result.account_name, result.our_signing_key, result.did_doc.to_string())
-        )
+        Ok((
+            row.get("seq_num"), 
+            row.get("account_name"), 
+            row.get("our_signing_key"), 
+            row.get::<String, &str>("did_doc").to_string()
+        ))
     }
     
     // async fn vaporize_account(&self, auth_pubkey: String) {
