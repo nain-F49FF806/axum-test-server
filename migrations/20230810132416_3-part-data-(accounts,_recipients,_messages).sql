@@ -11,6 +11,10 @@ CREATE TABLE IF NOT EXISTS accounts (
     -- mediator facing pubkey
     -- UNIQUE constraint automatically creates index for fast unique checking; is reused for scanning
     auth_pubkey VARCHAR(64) NOT NULL UNIQUE,
+    -- key used to sign messages to aries peer
+    our_signing_key VARCHAR(64) NOT NULL,
+    -- their complete diddoc, including routing keys etc (useful for wrapping messages in encryption envelope) 
+    their_diddoc JSON NOT NULL,
     PRIMARY KEY(account_id)
 );
 
