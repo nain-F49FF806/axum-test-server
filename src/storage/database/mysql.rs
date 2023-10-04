@@ -26,10 +26,12 @@ pub async fn get_db_pool() -> MySqlPool {
 #[cfg(feature = "mysql_db")]
 #[async_trait]
 impl MediatorPersistence for sqlx::MySqlPool {
-    async fn create_account(&self, auth_pubkey: &str) -> Result<(), String> {
+    async fn create_account(&self, auth_pubkey: &str, our_signing_key: &str, did_doc: &str) -> Result<(), String> {
         info!("Adding new account to database with auth_pubkey {:#?}", &auth_pubkey);
-        let insert_result = sqlx::query("INSERT INTO accounts (auth_pubkey) VALUES (?);")
+        let insert_result = sqlx::query("INSERT INTO accounts (auth_pubkey, our_signing_key, did_doc) VALUES (?, ?, ?);")
             .bind(auth_pubkey)
+            .bind(our_signing_key)
+            .bind(did_doc)
             .execute(self)
             .await;
         if let Err(err) = insert_result {
