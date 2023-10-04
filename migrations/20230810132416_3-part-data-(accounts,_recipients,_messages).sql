@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS accounts (
     -- https://dev.mysql.com/blog-archive/mysql-8-0-uuid-support/
     account_id BINARY(16) DEFAULT (UUID_TO_BIN(UUID(),true)) NOT NULL UNIQUE,
     -- for display purpose
-    account_name CHAR(36) GENERATED ALWAYS AS (BIN_TO_UUID(account_id)) VIRTUAL,
+    account_name CHAR(36) GENERATED ALWAYS AS (BIN_TO_UUID(account_id)) VIRTUAL  NOT NULL,
     -- mediator facing pubkey
     -- UNIQUE constraint automatically creates index for fast unique checking; is reused for scanning
     auth_pubkey VARCHAR(64) NOT NULL UNIQUE,
