@@ -36,6 +36,7 @@ mod mediator_coord_structs {
     #[derive(Serialize, Deserialize, Debug)]
     pub struct MediateRequestData {
         pub auth_pubkey: String,
+        pub did_doc: String
     }
 
     #[derive(Serialize, Deserialize, Debug)]
@@ -98,6 +99,7 @@ pub async fn handle_coord<T: MediatorPersistence>(
             handle_mediate_request(
                 storage,
                 mediate_req,
+                "",
                 MediateGrantData {
                     endpoint: "".to_owned(),
                     routing_keys: vec![],
@@ -122,10 +124,12 @@ pub async fn handle_unimplemented() -> Json<MediatorCoordMsgEnum> {
 pub async fn handle_mediate_request<T: MediatorPersistence>(
     storage: Arc<T>,
     mediate_req: MediateRequestData,
+    our_signing_key: &str,
     grant_data: MediateGrantData,
 ) -> Json<MediatorCoordMsgEnum> {
     let auth_pubkey = &mediate_req.auth_pubkey;
-    match storage.create_account(auth_pubkey).await {
+    let did_doc = &mediate_req.did_doc;
+    match storage.create_account(auth_pubkey, our_signing_key, did_doc).await {
         Ok(()) => Json(MediateGrant(grant_data)),
         Err(msg) => Json(MediateDeny(MediateDenyData { reason: msg })),
     }

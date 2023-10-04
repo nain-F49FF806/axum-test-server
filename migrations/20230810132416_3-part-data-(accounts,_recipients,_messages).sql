@@ -13,8 +13,8 @@ CREATE TABLE IF NOT EXISTS accounts (
     auth_pubkey VARCHAR(64) NOT NULL UNIQUE,
     -- key used to sign messages to aries peer
     our_signing_key VARCHAR(64) NOT NULL,
-    -- their complete diddoc, including routing keys etc (useful for wrapping messages in encryption envelope) 
-    their_diddoc JSON NOT NULL,
+    -- their complete did_doc, including routing keys etc (useful for wrapping messages in encryption envelope) 
+    did_doc JSON NOT NULL,
     PRIMARY KEY(account_id)
 );
 
