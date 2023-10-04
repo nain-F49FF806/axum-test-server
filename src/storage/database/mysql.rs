@@ -23,7 +23,6 @@ pub async fn get_db_pool() -> MySqlPool {
 }
 
 /// MediatorPersistence trait implementation for MySql Database
-#[cfg(feature = "mysql_db")]
 #[async_trait]
 impl MediatorPersistence for sqlx::MySqlPool {
     async fn create_account(&self, auth_pubkey: &str, our_signing_key: &str, did_doc: &str) -> Result<(), String> {
@@ -58,6 +57,31 @@ impl MediatorPersistence for sqlx::MySqlPool {
         };
         Ok(account_id)
     }
+    #[cfg(feature = "mediator_persistence_extras")]
+    async fn list_accounts(&self) -> Result<Vec<(String, String)>, String> {
+        let list: Vec<(String, String)> = sqlx::query("SELECT account_name, auth_pubkey FROM accounts;")
+            .fetch_all(self).await.map_err(|e| e.to_string())?
+            .iter().map(
+                |row| (
+                    row.get("account_name"), 
+                    row.get("auth_pubkey")
+                )
+            ).collect();
+        Ok(list)
+    }
+    #[cfg(feature = "mediator_persistence_extras")]
+    async fn get_account_details(&self, auth_pubkey: &str) -> Result<(u64, String, String, String), String> {
+        let row = sqlx::query("SELECT * FROM accounts WHERE auth_pubkey = ?;")
+            .bind(auth_pubkey)
+            .fetch_one(self).await.map_err(|e| e.to_string())?;
+        Ok((
+            row.get("seq_num"), 
+            row.get("account_name"), 
+            row.get("our_signing_key"), 
+            row.get::<String, &str>("did_doc").to_string()
+        ))
+    }
+    
     // async fn vaporize_account(&self, auth_pubkey: String) {
     //     let account: Vec<u8> = self.get_account(auth_pubkey).await?;
     //     let mut recipient_rows = sqlx::query(
