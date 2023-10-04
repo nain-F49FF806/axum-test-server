@@ -19,7 +19,7 @@ mod mediator_coord_structs {
         #[serde(rename = "https://didcomm.org/coordinate-mediation/1.0/mediate-deny")]
         MediateDeny(MediateDenyData),
         #[serde(rename = "https://didcomm.org/coordinate-mediation/1.0/mediate-grant")]
-        MediateGrant,
+        MediateGrant(MediateGrantData),
         #[serde(rename = "https://didcomm.org/coordinate-mediation/1.0/keylist-update")]
         KeylistUpdate(KeylistUpdateData),
         #[serde(rename = "https://didcomm.org/coordinate-mediation/1.0/keylist-update-response")]
@@ -44,6 +44,12 @@ mod mediator_coord_structs {
     }
 
     #[derive(Serialize, Deserialize, Debug)]
+    pub struct MediateGrantData {
+        pub endpoint: String,
+        pub routing_keys: Vec<String>,
+    }
+
+    #[derive(Serialize, Deserialize, Debug)]
     pub struct KeylistUpdateData {
         pub auth_pubkey: String,
         #[serde(rename(serialize = "updated", deserialize = "updates"))]
@@ -59,7 +65,7 @@ mod mediator_coord_structs {
     pub enum KeylistUpdateItemAction {
         #[serde(rename = "add")]
         Add,
-        #[serde(rename = "remove")] 
+        #[serde(rename = "remove")]
         Remove,
     }
     #[derive(Serialize, Deserialize, Debug)]
@@ -80,7 +86,7 @@ mod mediator_coord_structs {
     #[derive(Serialize, Deserialize, Debug)]
     pub struct KeylistItem {
         pub recipient_key: String,
-    } 
+    }
 }
 
 pub async fn handle_coord<T: MediatorPersistence>(
@@ -88,8 +94,20 @@ pub async fn handle_coord<T: MediatorPersistence>(
     Json(message): Json<MediatorCoordMsgEnum>,
 ) -> Json<MediatorCoordMsgEnum> {
     match message {
-        MediateRequest(mediate_req) => handle_mediate_request(storage, mediate_req).await,
-        KeylistUpdate(keylist_update_data) => handle_keylist_update(storage, keylist_update_data).await,
+        MediateRequest(mediate_req) => {
+            handle_mediate_request(
+                storage,
+                mediate_req,
+                MediateGrantData {
+                    endpoint: "".to_owned(),
+                    routing_keys: vec![],
+                },
+            )
+            .await
+        }
+        KeylistUpdate(keylist_update_data) => {
+            handle_keylist_update(storage, keylist_update_data).await
+        }
         KeylistQuery(keylist_query_data) => handle_keylist_query(storage, keylist_query_data).await,
         _ => handle_unimplemented().await,
     }
@@ -104,10 +122,11 @@ pub async fn handle_unimplemented() -> Json<MediatorCoordMsgEnum> {
 pub async fn handle_mediate_request<T: MediatorPersistence>(
     storage: Arc<T>,
     mediate_req: MediateRequestData,
+    grant_data: MediateGrantData,
 ) -> Json<MediatorCoordMsgEnum> {
     let auth_pubkey = &mediate_req.auth_pubkey;
     match storage.create_account(auth_pubkey).await {
-        Ok(()) => Json(MediateGrant),
+        Ok(()) => Json(MediateGrant(grant_data)),
         Err(msg) => Json(MediateDeny(MediateDenyData { reason: msg })),
     }
 }
@@ -118,17 +137,15 @@ pub async fn handle_keylist_query<T: MediatorPersistence>(
 ) -> Json<MediatorCoordMsgEnum> {
     let auth_pubkey = &keylist_query_data.auth_pubkey;
     let keylist_items: Vec<KeylistItem> = match storage.list_recipient_keys(auth_pubkey).await {
-        Ok(recipient_keys) => {
-            recipient_keys
-                .into_iter()
-                .map(|recipient_key| KeylistItem{recipient_key})
-                .collect()
-        },
-        Err(err) => {
-            return Json(MediatorCoordMsgEnum::XumErrorMsg{error: err})
-        }
+        Ok(recipient_keys) => recipient_keys
+            .into_iter()
+            .map(|recipient_key| KeylistItem { recipient_key })
+            .collect(),
+        Err(err) => return Json(MediatorCoordMsgEnum::XumErrorMsg { error: err }),
     };
-    Json(MediatorCoordMsgEnum::Keylist( KeylistData { keys: keylist_items }))
+    Json(MediatorCoordMsgEnum::Keylist(KeylistData {
+        keys: keylist_items,
+    }))
 }
 
 pub async fn handle_keylist_update<T: MediatorPersistence>(
