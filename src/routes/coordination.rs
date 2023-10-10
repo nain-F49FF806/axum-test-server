@@ -3,92 +3,9 @@
 
 use crate::storage::MediatorPersistence;
 use axum::{extract::State, Json};
-use mediator_coord_structs::MediatorCoordMsgEnum::*;
-use mediator_coord_structs::*;
+use crate::didcomm_types::mediator_coord_structs::*;
+use crate::didcomm_types::mediator_coord_structs::MediatorCoordMsgEnum::*;
 use std::sync::Arc;
-
-mod mediator_coord_structs {
-    use serde::{Deserialize, Serialize};
-    // use serde_with::skip_serializing_none;
-
-    #[derive(Serialize, Deserialize, Debug)]
-    #[serde(tag = "@type")]
-    pub enum MediatorCoordMsgEnum {
-        #[serde(rename = "https://didcomm.org/coordinate-mediation/1.0/mediate-request")]
-        MediateRequest(MediateRequestData),
-        #[serde(rename = "https://didcomm.org/coordinate-mediation/1.0/mediate-deny")]
-        MediateDeny(MediateDenyData),
-        #[serde(rename = "https://didcomm.org/coordinate-mediation/1.0/mediate-grant")]
-        MediateGrant(MediateGrantData),
-        #[serde(rename = "https://didcomm.org/coordinate-mediation/1.0/keylist-update")]
-        KeylistUpdate(KeylistUpdateData),
-        #[serde(rename = "https://didcomm.org/coordinate-mediation/1.0/keylist-update-response")]
-        KeylistUpdateResponse(KeylistUpdateData),
-        #[serde(rename = "https://didcomm.org/coordinate-mediation/1.0/keylist-query")]
-        KeylistQuery(KeylistQueryData),
-        #[serde(rename = "https://didcomm.org/coordinate-mediation/1.0/keylist")]
-        Keylist(KeylistData),
-        XumErrorMsg {
-            error: String,
-        },
-    }
-
-    #[derive(Serialize, Deserialize, Debug)]
-    pub struct MediateRequestData {
-        pub auth_pubkey: String,
-        pub did_doc: String
-    }
-
-    #[derive(Serialize, Deserialize, Debug)]
-    pub struct MediateDenyData {
-        pub reason: String,
-    }
-
-    #[derive(Serialize, Deserialize, Debug)]
-    pub struct MediateGrantData {
-        pub endpoint: String,
-        pub routing_keys: Vec<String>,
-    }
-
-    #[derive(Serialize, Deserialize, Debug)]
-    pub struct KeylistUpdateData {
-        pub auth_pubkey: String,
-        #[serde(rename(serialize = "updated", deserialize = "updates"))]
-        pub updates: Vec<KeylistUpdateItem>,
-    }
-    #[derive(Serialize, Deserialize, Debug)]
-    pub struct KeylistUpdateItem {
-        pub recipient_key: String,
-        pub action: KeylistUpdateItemAction,
-        pub result: Option<KeylistUpdateItemResult>,
-    }
-    #[derive(Serialize, Deserialize, Debug)]
-    pub enum KeylistUpdateItemAction {
-        #[serde(rename = "add")]
-        Add,
-        #[serde(rename = "remove")]
-        Remove,
-    }
-    #[derive(Serialize, Deserialize, Debug)]
-    pub enum KeylistUpdateItemResult {
-        ClientError,
-        ServerError,
-        NoChange,
-        Success,
-    }
-    #[derive(Serialize, Deserialize, Debug)]
-    pub struct KeylistQueryData {
-        pub auth_pubkey: String,
-    }
-    #[derive(Serialize, Deserialize, Debug)]
-    pub struct KeylistData {
-        pub keys: Vec<KeylistItem>,
-    }
-    #[derive(Serialize, Deserialize, Debug)]
-    pub struct KeylistItem {
-        pub recipient_key: String,
-    }
-}
 
 pub async fn handle_coord<T: MediatorPersistence>(
     State(storage): State<Arc<T>>,
