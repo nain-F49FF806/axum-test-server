@@ -7,26 +7,25 @@ use crate::didcomm_types::mediator_coord_structs::*;
 use crate::didcomm_types::mediator_coord_structs::MediatorCoordMsgEnum::*;
 use std::sync::Arc;
 
-pub async fn handle_coord<T: MediatorPersistence>(
+pub async fn handle_coord_authenticated<T: MediatorPersistence>(
     State(storage): State<Arc<T>>,
     Json(message): Json<MediatorCoordMsgEnum>,
     auth_pubkey: &str,
-    did_doc: &str,
-    our_signing_key: &str,
 ) -> Json<MediatorCoordMsgEnum> {
     match message {
         MediateRequest => {
-            handle_mediate_request(
-                storage,
-                auth_pubkey,
-                did_doc,
-                our_signing_key,
-                MediateGrantData {
-                    endpoint: "".to_owned(),
-                    routing_keys: vec![],
-                },
-            )
-            .await
+            panic!("Use handle_mediate_request directly. This handler is for preregistered clients.");
+            // handle_mediate_request(
+            //     storage,
+            //     auth_pubkey,
+            //     "{}",
+            //     "",
+            //     MediateGrantData {
+            //         endpoint: "".to_owned(),
+            //         routing_keys: vec![],
+            //     },
+            // )
+            // .await
         }
         KeylistUpdate(keylist_update_data) => {
             handle_keylist_update(storage, keylist_update_data, auth_pubkey).await
