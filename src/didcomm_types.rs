@@ -79,6 +79,7 @@ impl PickupStatusMsg {
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PickupStatusReqMsg {
+    #[serde(default)]
     pub auth_pubkey: String,
     pub recipient_key: Option<String>,
 }
@@ -97,6 +98,7 @@ pub struct PickupStatusReqMsg {
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PickupDeliveryReqMsg {
+    #[serde(default)]
     pub auth_pubkey: String,
     pub limit: u32,
     pub recipient_key: Option<String>,
@@ -172,6 +174,7 @@ pub mod mediator_coord_structs {
 
     #[derive(Serialize, Deserialize, Debug)]
     pub struct MediateRequestData {
+        #[serde(default)]
         pub auth_pubkey: String,
         pub did_doc: String,
     }
@@ -189,6 +192,7 @@ pub mod mediator_coord_structs {
 
     #[derive(Serialize, Deserialize, Debug)]
     pub struct KeylistUpdateData {
+        #[serde(default)]
         pub auth_pubkey: String,
         #[serde(rename(serialize = "updated", deserialize = "updates"))]
         pub updates: Vec<KeylistUpdateItem>,
@@ -215,6 +219,7 @@ pub mod mediator_coord_structs {
     }
     #[derive(Serialize, Deserialize, Debug)]
     pub struct KeylistQueryData {
+        #[serde(default)]
         pub auth_pubkey: String,
     }
     #[derive(Serialize, Deserialize, Debug)]
