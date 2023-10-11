@@ -1,4 +1,4 @@
-🚧🚧WIP🚧🚧: Integration into aries-vcx in process. See main branch for the MVP http service. 
+> 🚧🚧**WIP**🚧🚧: Integration into aries-vcx in process. See main branch for the MVP http service.
 
 # Aries mediator service (http)
 
