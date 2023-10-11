@@ -10,13 +10,17 @@ use std::sync::Arc;
 pub async fn handle_coord<T: MediatorPersistence>(
     State(storage): State<Arc<T>>,
     Json(message): Json<MediatorCoordMsgEnum>,
+    auth_pubkey: &str,
+    did_doc: &str,
+    our_signing_key: &str,
 ) -> Json<MediatorCoordMsgEnum> {
     match message {
-        MediateRequest(mediate_req) => {
+        MediateRequest => {
             handle_mediate_request(
                 storage,
-                mediate_req,
-                "",
+                auth_pubkey,
+                did_doc,
+                our_signing_key,
                 MediateGrantData {
                     endpoint: "".to_owned(),
                     routing_keys: vec![],
@@ -25,9 +29,9 @@ pub async fn handle_coord<T: MediatorPersistence>(
             .await
         }
         KeylistUpdate(keylist_update_data) => {
-            handle_keylist_update(storage, keylist_update_data).await
+            handle_keylist_update(storage, keylist_update_data, auth_pubkey).await
         }
-        KeylistQuery(keylist_query_data) => handle_keylist_query(storage, keylist_query_data).await,
+        KeylistQuery(keylist_query_data) => handle_keylist_query(storage, keylist_query_data, auth_pubkey).await,
         _ => handle_unimplemented().await,
     }
 }
@@ -40,12 +44,12 @@ pub async fn handle_unimplemented() -> Json<MediatorCoordMsgEnum> {
 
 pub async fn handle_mediate_request<T: MediatorPersistence>(
     storage: Arc<T>,
-    mediate_req: MediateRequestData,
+    auth_pubkey: &str,
+    did_doc: &str,
     our_signing_key: &str,
     grant_data: MediateGrantData,
 ) -> Json<MediatorCoordMsgEnum> {
-    let auth_pubkey = &mediate_req.auth_pubkey;
-    let did_doc = &mediate_req.did_doc;
+
     match storage.create_account(auth_pubkey, our_signing_key, did_doc).await {
         Ok(()) => Json(MediateGrant(grant_data)),
         Err(msg) => Json(MediateDeny(MediateDenyData { reason: msg })),
@@ -55,8 +59,8 @@ pub async fn handle_mediate_request<T: MediatorPersistence>(
 pub async fn handle_keylist_query<T: MediatorPersistence>(
     storage: Arc<T>,
     keylist_query_data: KeylistQueryData,
+    auth_pubkey: &str
 ) -> Json<MediatorCoordMsgEnum> {
-    let auth_pubkey = &keylist_query_data.auth_pubkey;
     let keylist_items: Vec<KeylistItem> = match storage.list_recipient_keys(auth_pubkey).await {
         Ok(recipient_keys) => recipient_keys
             .into_iter()
@@ -72,8 +76,8 @@ pub async fn handle_keylist_query<T: MediatorPersistence>(
 pub async fn handle_keylist_update<T: MediatorPersistence>(
     storage: Arc<T>,
     keylist_update_data: KeylistUpdateData,
+    auth_pubkey: &str
 ) -> Json<MediatorCoordMsgEnum> {
-    let auth_pubkey = &keylist_update_data.auth_pubkey;
     let updates: Vec<KeylistUpdateItem> = keylist_update_data.updates;
     let mut updated: Vec<KeylistUpdateItem> = Vec::new();
     for update_item in updates.into_iter() {
@@ -101,7 +105,6 @@ pub async fn handle_keylist_update<T: MediatorPersistence>(
     }
     Json(MediatorCoordMsgEnum::KeylistUpdateResponse(
         KeylistUpdateData {
-            auth_pubkey: keylist_update_data.auth_pubkey,
             updates: updated,
         },
     ))

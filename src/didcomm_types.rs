@@ -154,7 +154,7 @@ pub mod mediator_coord_structs {
     #[serde(tag = "@type")]
     pub enum MediatorCoordMsgEnum {
         #[serde(rename = "https://didcomm.org/coordinate-mediation/1.0/mediate-request")]
-        MediateRequest(MediateRequestData),
+        MediateRequest,
         #[serde(rename = "https://didcomm.org/coordinate-mediation/1.0/mediate-deny")]
         MediateDeny(MediateDenyData),
         #[serde(rename = "https://didcomm.org/coordinate-mediation/1.0/mediate-grant")]
@@ -172,12 +172,12 @@ pub mod mediator_coord_structs {
         },
     }
 
-    #[derive(Serialize, Deserialize, Debug)]
-    pub struct MediateRequestData {
-        #[serde(default)]
-        pub auth_pubkey: String,
-        pub did_doc: String,
-    }
+    // #[derive(Serialize, Deserialize, Debug)]
+    // pub struct MediateRequestData {
+    //     #[serde(default)]
+    //     pub auth_pubkey: String,
+    //     pub did_doc: String,
+    // }
 
     #[derive(Serialize, Deserialize, Debug)]
     pub struct MediateDenyData {
@@ -192,8 +192,6 @@ pub mod mediator_coord_structs {
 
     #[derive(Serialize, Deserialize, Debug)]
     pub struct KeylistUpdateData {
-        #[serde(default)]
-        pub auth_pubkey: String,
         #[serde(rename(serialize = "updated", deserialize = "updates"))]
         pub updates: Vec<KeylistUpdateItem>,
     }
@@ -218,10 +216,7 @@ pub mod mediator_coord_structs {
         Success,
     }
     #[derive(Serialize, Deserialize, Debug)]
-    pub struct KeylistQueryData {
-        #[serde(default)]
-        pub auth_pubkey: String,
-    }
+    pub struct KeylistQueryData {}
     #[derive(Serialize, Deserialize, Debug)]
     pub struct KeylistData {
         pub keys: Vec<KeylistItem>,

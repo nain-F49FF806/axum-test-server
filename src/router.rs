@@ -1,6 +1,6 @@
 // Copyright 2023 Naian G.
 // SPDX-License-Identifier: Apache-2.0
-use crate::routes::coordination::handle_coord;
+// use crate::routes::coordination::handle_coord;
 use crate::routes::forward::handle_forward;
 use crate::routes::hello_world;
 use crate::routes::json;
@@ -25,6 +25,6 @@ pub async fn create_router() -> Router {
         )
         .route("/forward", post(handle_forward))
         .route("/pickup", post(handle_pickup))
-        .route("/coord", post(handle_coord))
+        // .route("/coord", post(handle_coord))
         .with_state(Arc::new(storage))
 }
