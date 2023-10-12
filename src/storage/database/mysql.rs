@@ -70,7 +70,7 @@ impl MediatorPersistence for sqlx::MySqlPool {
         Ok(list)
     }
     #[cfg(feature = "mediator_persistence_extras")]
-    async fn get_account_details(&self, auth_pubkey: &str) -> Result<(u64, String, String, String), String> {
+    async fn get_account_details(&self, auth_pubkey: &str) -> Result<(u64, String, String, serde_json::Value), String> {
         let row = sqlx::query("SELECT * FROM accounts WHERE auth_pubkey = ?;")
             .bind(auth_pubkey)
             .fetch_one(self).await.map_err(|e| e.to_string())?;
@@ -78,7 +78,7 @@ impl MediatorPersistence for sqlx::MySqlPool {
             row.get("seq_num"), 
             row.get("account_name"), 
             row.get("our_signing_key"), 
-            row.get::<String, &str>("did_doc").to_string()
+            row.get::<serde_json::Value, &str>("did_doc")
         ))
     }
     

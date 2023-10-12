@@ -29,5 +29,5 @@ pub trait MediatorPersistence: Send + Sync + 'static {
     async fn list_accounts(&self) -> Result<Vec<(String, String)>, String>;
     #[cfg(feature = "mediator_persistence_extras")]
     /// Returns account details (sr.no, account_name, our_signing_key, did_doc)
-    async fn get_account_details(&self, auth_pubkey: &str) -> Result<(u64, String, String, String), String>;
+    async fn get_account_details(&self, auth_pubkey: &str) -> Result<(u64, String, String, serde_json::Value), String>;
 }
