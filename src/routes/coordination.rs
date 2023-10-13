@@ -27,7 +27,7 @@ pub async fn handle_coord_authenticated<T: MediatorPersistence>(
             // )
             // .await
         }
-        KeylistUpdate(keylist_update_data) => {
+        KeylistUpdateRequest(keylist_update_data) => {
             handle_keylist_update(storage, keylist_update_data, auth_pubkey).await
         }
         KeylistQuery(keylist_query_data) => handle_keylist_query(storage, keylist_query_data, auth_pubkey).await,
@@ -74,7 +74,7 @@ pub async fn handle_keylist_query<T: MediatorPersistence>(
 
 pub async fn handle_keylist_update<T: MediatorPersistence>(
     storage: Arc<T>,
-    keylist_update_data: KeylistUpdateData,
+    keylist_update_data: KeylistUpdateRequestData,
     auth_pubkey: &str
 ) -> Json<MediatorCoordMsgEnum> {
     let updates: Vec<KeylistUpdateItem> = keylist_update_data.updates;
@@ -103,8 +103,8 @@ pub async fn handle_keylist_update<T: MediatorPersistence>(
         });
     }
     Json(MediatorCoordMsgEnum::KeylistUpdateResponse(
-        KeylistUpdateData {
-            updates: updated,
+        KeylistUpdateResponseData {
+            updated,
         },
     ))
 }
