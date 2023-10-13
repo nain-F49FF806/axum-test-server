@@ -160,9 +160,9 @@ pub mod mediator_coord_structs {
         #[serde(rename = "https://didcomm.org/coordinate-mediation/1.0/mediate-grant")]
         MediateGrant(MediateGrantData),
         #[serde(rename = "https://didcomm.org/coordinate-mediation/1.0/keylist-update")]
-        KeylistUpdate(KeylistUpdateData),
+        KeylistUpdateRequest(KeylistUpdateRequestData),
         #[serde(rename = "https://didcomm.org/coordinate-mediation/1.0/keylist-update-response")]
-        KeylistUpdateResponse(KeylistUpdateData),
+        KeylistUpdateResponse(KeylistUpdateResponseData),
         #[serde(rename = "https://didcomm.org/coordinate-mediation/1.0/keylist-query")]
         KeylistQuery(KeylistQueryData),
         #[serde(rename = "https://didcomm.org/coordinate-mediation/1.0/keylist")]
@@ -191,9 +191,12 @@ pub mod mediator_coord_structs {
     }
 
     #[derive(Serialize, Deserialize, Debug)]
-    pub struct KeylistUpdateData {
-        #[serde(rename(serialize = "updated", deserialize = "updates"))]
+    pub struct KeylistUpdateRequestData {
         pub updates: Vec<KeylistUpdateItem>,
+    }
+    #[derive(Serialize, Deserialize, Debug)]
+    pub struct KeylistUpdateResponseData {
+        pub updated: Vec<KeylistUpdateItem>,
     }
     #[derive(Serialize, Deserialize, Debug)]
     pub struct KeylistUpdateItem {
